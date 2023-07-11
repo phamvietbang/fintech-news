@@ -1,0 +1,41 @@
+{
+ "tag": "ngan hang",
+ "title": "Các tài khoản nhận nguồn tiền chuyển vào đáng ngờ, ngân hàng được quyền tạm dừng giao dịch",
+ "attract": "Các ngân hàng được quyền từ chối thực hiện giao dịch hoặc tạm dừng cung cấp dịch vụ ngân hàng điện tử và thực hiện các biện pháp xác thực, xác minh lại khách hàng nếu nghi ngờ tài khoản thanh toán không chính chủ.",
+ "date": "04/07/2023 14:45",
+ "content": [
+  "Làm sạch dữ liệu, giám sát nguồn tiền",
+  "NHNN vừa có công văn gửi các ngân hàng, chi nhánh ngân hàng nước ngoài về việc tăng cường các biện pháp quản lý rủi ro trong mở, sử dụng tài khoản thanh toán.",
+  "Cụ thể, NHNN yêu cầu tổ chức tín dụng (TCTD) rà soát quy trình, quy định nội bộ về mở, sử dụng tài khoản thanh toán và chỉ đạo cán bộ, nhân viên trong toàn hệ thống TCTD thực hiện nghiêm trình tự, thủ tục mở tài khoản thanh toán theo quy định tại Điều 14 và khoản 1 Điều 14a Thông tư số 23/2014/TT-NHNN ngày 19/8/2014 (đã được sửa đổi, bổ sung), không thực hiện việc mở tài khoản thanh toán theo danh sách khách hàng lập sẵn, bảo mật thông tin khảch hàng mở tài khoản.",
+  "Đối với các tài khoản thanh toán nghi ngờ nguồn tiền chuyển vào không hợp pháp, TCTD cần yêu câu khách hàng ra quầy giao dịch để xác minh lại thông tin khách hàng, dừng cung cấp dịch vụ trên Mobile banking hoặc yêu cầu xác thực giao dịch thanh toán kênh điện tử bằng yếu tố sinh trắc học hoặc sử dụng chữ ký số, dừng giao dịch nếu có đủ căn cứ xác đáng,..",
+  "Đẩy nhanh tiến độ triển khai kết nối khai thác dữ liệu dân cư để làm sạch dữ liệu, xác minh chính xác khách hàng theo Kế hoạch số 01/KHPH-BCA- NHNN ngày 24/4/2023 của Ngân hàng Nhà nước và Bộ Công an về phối hợp triển khai Đề án 06 đảm bảo kiểm tra, đối chiếu khớp đúng thông tin khách hàng mở tài khoản thanh toán với thông tin lưu trữ trên Cơ sở dữ liệu quốc gia về dân cư nhằm hạn chế việc mở tài khoản thanh toán bằng giấy tờ tùy thân giả mạo, cho thuê tài khoản thanh toán,...",
+  "Trong đó, NHNN lưu ý một số nội dung. Thứ nhất, đối với trường hợp khách hàng mở tài khoản thanh toán tại chi nhánh, phòng giao dịch: Phổ biến, đào tạo đến toàn bộ cán bộ, giao dịch viên về nhận biết giấy tờ tùy thân thật, giả khi tiếp xúc kiểm tra giấy tờ tùy thân của khách hàng trong quá trình mở tài khoản thanh toán; Nghiên cứu sử dụng thiết bị/ứng dụng chuyên dụng đọc thông tin trong chip của căn cước công dân (CCCD) gắn chip để xác thực thông tin, dữ liệu khách hàng mở tài khoản thanh toán tại quầy phục vụ kiểm tra, đối chiếu xác thực khách hàng trong quá trình sử dụng tài khoản thanh toán. Lưu trữ, bảo quản đầy đủ dữ liệu sinh trắc học của khách hàng để phục vụ kiểm tra đối chiếu xác thực khách hàng trong quá trình sử dụng tài khoản thanh toán.",
+  "Thứ hai, đối với trường hợp khách hàng mở tài khoản thanh toán bằng phương thức điện tử: các ngân hàng thương mại phải áp dụng các biện pháp công nghệ để kiểm tra tính hợp pháp, hợp lệ của giây tờ tùy thân của khách hàng; Nghiên cứu áp dụng các giải pháp, công nghệ thiết bị chuyên dụng kết nối khai thác dữ liệu dân cư, sử dựng CCCD gắn chip để kiểm tra tính hợp pháp, hợp lệ của CCCD hoặc nghiên cứu kết nối Cơ sở dữ liệu quôc gia dân cư để xác minh thông tin nhận biêt khách hàng; Lưu trữ, bảo quản đầy đủ dữ liệu sinh trắc học của khách hàng để phục vụ kiểm tra đối chiếu xác thực khách hàng trong quá trình sử dụng tài khoản thanh toán.",
+  "Ngân hàng phải xây dựng bộ tiêu chí nhận diện tài khoản thanh toán đáng ngờ, có dấu hiệu lừa đảo",
+  "NHNN cũng yêu cầu các tổ chức tín dụng phải chủ động nghiên cứu, xây dựng, áp dụng các biện pháp quản lý rủi ro trọng hoạt động mở, sử dụng tài khoản thanh toán nhằm phát hiện, ngăn ngừa các hành vi gian lận lừa đảo, lợi dụng tài khoản thanh toán cho mục đích bất hợp pháp.",
+  "Trong đó bao gồm việc xây dựng, áp dụng Bộ tiêu chí nhận diện các tài khoản thanh toán có dấu hiệu nghi ngờ gian lận, lừa đảo; thường xuyên cập nhật các dấu hiệu trong Bộ tiêu chí và phổ biến quán triệt trên toàn hệ thống đê áp dụng thống nhất Bộ tiêu chí.",
+  "Căn cứ vào mức độ rủi ro của các tiêu chí trong Bộ tiêu chí, TCTD áp dụng từ chối thực hiện giao dịch hoặc tạm dừng cung cấp dịch vụ ngân hàng điện tử và thực hiện các biện pháp xác thực, xác minh lại khách hàng. Đơn cử: áp dụng giải pháp xác minh thông qua yếu tố sinh trắc học trên ứng dụng di động Mobile App; xác thực (MOC) qua Căn cước công dân gắn chip; xác thực thông qua tài khoản định danh điện tử VNelD mức độ 2; xác thực trực tuyến với Cơ sở dữ liệu quốc gia về dân cư bằng API; gặp mặt trực tiếp tại quầy giao dịch;...).",
+  "Rà soát, sửa đổi, bổ sung nội dung Thỏa thuận mở, sử dụng tài khoản thanh toán, Thỏa thuận sử dụng dịch vụ ngân hàng điện tử và các quy định nội bộ quản lý rủi ro để triển khai áp dụng các biện pháp trong Bộ tiêu chí.",
+  "Định kỳ hàng tháng cung cấp thông tin về các tài khoản thanh toán có dấu hiệu nghi ngờ liên quan đến giao dịch gian lận, lừa đảo cho Ngân hàng Nhà nước (qua Vụ Thanh toán). Ngân hàng Nhà nước rà soát tổng hợp xây dựng kho dữ liệu chung về tài khoản thanh toán có dấu hiệu nghi ngờ gian lận và sẽ nghiên cứu đê có cơ chê chia sẻ thông tin với các TCTD để góp phần ngăn ngừa hoạt động gian lận, lừa đảo qua tài khoản thanh toán.",
+  "Ngoài ra, tổ chức tín dụng cũng phải chủ động nghiên cứu, xây dựng, triển khai các biện pháp đảm bảo việc sử dụng tài khoản thanh toán được thực hiện bởi chính chủ tài khoản thanh toán hoặc người được ủy quyền hợp pháp nhằm hạn chế cho thuê, mượn tài khoản thanh toán như: Định kỳ áp dụng các biện pháp để kiểm tra, xác minh đảm bảo chủ tài khoản thanh toán là chủ số thuê bao di động đã đăng ký sử dụng dịch vụ SMS Banking, dịch vụ Intemet/Mobile Banking (ưu tiên áp dụng trước đôi với các tài khoản có dâu hiệu đáng ngờ); Thu thập, lưu trữ dữ liệu sinh trắc học của chủ tài khoản để kiểm tra, đối chiếu trong quá trình chủ tài khoản thanh toán thực hiện giao dịch; Nghiên cứu, có kế hoạch áp dụng sử dụng chữ ký sô hoặc yêu câu xác thực bằng yếu tố sinh trắc học của chủ tài khoản thanh toán theo hạn mức giao dịch phù hợp ưên kênh trực tuyến; Triển khai các thuật toán trí tuệ nhân tạo/học máy để kịp thời nhận diện, phát hiện các hành vi bất thường, rủi ro cao trong sử dụng tài khoản thanh toán…",
+  "T.L",
+  "Báo điện tử Đầu tư, thuộc nhóm báo của Báo Đầu tư",
+  "Cơ quan của Bộ Kế hoạch và Đầu tư.",
+  "Giấy phép số 541/GP-BTTTT do Bộ Thông tin và Truyền thông cấp ngày 23 tháng 8 năm 2021",
+  "Tổng Biên Tập: Lê Trọng Minh",
+  "Phó Tổng Biên tập phụ trách: Bùi Đức Hải",
+  "Thư ký tòa soạn: Phùng Huy Hào",
+  "Tòa soạn: 47 Quán Thánh, Ba Đình, Hà Nội",
+  "ĐT: 0243.845.0537 - Fax: 0243.823.5281",
+  "Email: baodautu.vn@vir.com.vn - Website:https://baodautu.vn/",
+  "© Báo Đầu tư giữ bản quyền nội dung trên website này",
+  "Việc sử dụng nội dung đăng tải trên Báo điện tử Đầu tư - baodautu.vn",
+  "phải có sự đồng ý bằng văn bản của cơ quan Báo Đầu tư."
+ ],
+ "image": [
+  {
+   "url": "http://baodautu.vn/Images/thuylien/2023/07/04/tai-khoan-thanh-toan-co-nguon-tien-chuyen-vao-dang-ngo-ngan-hang-co-the-dung-giao-dich1688455605.jpg",
+   "title": "Các ngân hàng phải kiểm tra định kỳ chủ tài khoản để hạn chế tình trạng cho thuê, mượn tài khoản"
+  }
+ ]
+}
