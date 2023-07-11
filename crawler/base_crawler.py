@@ -58,13 +58,12 @@ class BaseCrawler:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
         }
         response = requests.get(url, headers=headers)
-
         status = response.status_code
         content = response.text
         page_soup = soup(content, "html.parser")
         return page_soup, status
 
-    def _fetch_data(self, url, func, *args, **kwargs):
+    def fetch_data(self, url, func, *args, **kwargs):
         retry_time = 0
         data = None
         while retry_time < self.max_retry_times:
