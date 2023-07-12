@@ -3,20 +3,19 @@ import time
 
 from bs4 import BeautifulSoup as soup
 from ftfy import fix_encoding
+from kafka import KafkaProducer
 
-from crawler.base_crawler import BaseCrawler
+from crawler.baodautu_crawler import BaoDauTuCrawler
 from utils.logger_utils import get_logger
 
 logger = get_logger('VnEconomy Crawler')
 
 
-class VnEconomyCrawler(BaseCrawler):
-    def __init__(self, url, tag, start_page):
-        super().__init__()
-        self.start_page = start_page
-        self.tag = tag
-        self.url = url
-        self.save_file = f"../.data/vneconomy"
+class VnEconomyCrawler(BaoDauTuCrawler):
+    def __init__(self, url, tag, start_page, producer: KafkaProducer = None, use_kafka=False):
+        super().__init__(url, tag, start_page, producer, use_kafka)
+        self.name = "vneconomy"
+        self.save_file = f"../data"
 
     @staticmethod
     def get_all_news_url(page_soup: soup):
@@ -56,6 +55,7 @@ class VnEconomyCrawler(BaseCrawler):
             tags = page_soup.find("div", class_="detail__tag")
             news_tags = self.get_tags(tags)
             result = {
+                "journal": self.name,
                 "type": self.tag,
                 "title": self.preprocess_data(title),
                 "attract": self.preprocess_data(attract),
@@ -70,15 +70,14 @@ class VnEconomyCrawler(BaseCrawler):
             logger.warning(e)
             return None
 
-
     def write_to_file(self, data, file_name):
         with open(f"{self.save_file}/{file_name}.json", "w", encoding="utf-8") as f:
             json.dump(data, f, indent=1, ensure_ascii=False)
 
-    @staticmethod
-    def get_file_name(news_url):
+    def get_file_name(self, news_url):
         file_name = news_url.split("/")[-1]
         file_name = file_name.split(".")[0]
+        file_name = f"{self.name}_{file_name}"
         return file_name
 
     def get_images(self, imgs):
@@ -123,7 +122,10 @@ class VnEconomyCrawler(BaseCrawler):
                 data = self.fetch_data(news_url, self.get_news_info)
                 file_name = self.get_file_name(news_url)
                 if data:
-                    self.write_to_file(data, file_name)
+                    if not self.use_kafka:
+                        self.write_to_file(data, file_name)
+                    else:
+                        self.write_to_kafka(data, file_name)
             page += 1
 
             logger.info(f"Crawl {len(news_urls)} in {round(time.time() - begin, 2)}s")

@@ -3,29 +3,28 @@ import time
 
 from bs4 import BeautifulSoup as soup
 from ftfy import fix_encoding
+from kafka import KafkaProducer
 
-from crawler.base_crawler import BaseCrawler
+from crawler.baodautu_crawler import BaoDauTuCrawler
 from utils.logger_utils import get_logger
 
 logger = get_logger('NCDT Crawler')
 
 
-class NCDTCrawler(BaseCrawler):
-    def __init__(self, url, tag, start_page):
-        super().__init__()
-        self.start_page = start_page
-        self.tag = tag
-        self.url = url
-        self.save_file = f"../.data/nhipcaudautu"
+class NCDTCrawler(BaoDauTuCrawler):
+    def __init__(self, url, tag, start_page, producer: KafkaProducer=None, use_kafka=False):
+        super().__init__(url, tag, start_page, producer, use_kafka)
+        self.name = "nhipcaudautu"
+        self.save_file = f"../data"
 
     @staticmethod
     def get_all_news_url(page_soup: soup):
         result = []
-        h3_tags = page_soup.find_all("p", class_="entry-title")
-        for tag in h3_tags:
+        div_tag = page_soup.find("div", class_="col-xs-12 col-sm-12 col-md-12 col-lg-12")
+        p_tags = div_tag.find_all("p", class_="entry-title")
+        for tag in p_tags:
             a_tag = tag.find("a")
-            if 'href' in a_tag:
-                result.append(f"https://nhipcaudautu.vn{a_tag['href']}")
+            result.append(f"https://nhipcaudautu.vn{a_tag['href']}")
         return result
 
     @staticmethod
@@ -52,11 +51,12 @@ class NCDTCrawler(BaseCrawler):
             for content in contents:
                 news_contents.append(self.preprocess_data(content))
 
-            imgs = main_content.find_all("tboy")
+            imgs = main_content.find_all("tbody")
             news_imgs = self.get_images(imgs)
             tags = page_soup.find("div", "post-tags")
             news_tags = self.get_tags(tags)
             result = {
+                "journal": self.name,
                 "type": self.tag,
                 "title": self.preprocess_data(title),
                 "attract": self.preprocess_data(attract),
@@ -75,10 +75,9 @@ class NCDTCrawler(BaseCrawler):
         with open(f"{self.save_file}/{file_name}.json", "w", encoding="utf-8") as f:
             json.dump(data, f, indent=1, ensure_ascii=False)
 
-    @staticmethod
-    def get_file_name(news_url):
-        file_name = news_url.split("/")[-1]
-        file_name = file_name.split(".")[0]
+    def get_file_name(self, news_url):
+        file_name = news_url.split("/")[-2]
+        file_name = f"{self.name}_{file_name}"
         return file_name
 
     def get_images(self, imgs):
@@ -86,10 +85,11 @@ class NCDTCrawler(BaseCrawler):
         for img in imgs:
             img_info = img.find_all("td")
             if img_info:
-                img_url = img_info[0].find("img")["src"]
-                img_name = ""
+                img_url = img_info[0].find("img")
                 if not img_url:
                     continue
+                img_url = img_url["src"]
+                img_name = ""
                 if len(img_info) > 1:
                     img_name = self.preprocess_data(img_info[1])
                 news_imgs.append({
@@ -122,6 +122,21 @@ class NCDTCrawler(BaseCrawler):
                 data = self.fetch_data(news_url, self.get_news_info)
                 file_name = self.get_file_name(news_url)
                 if data:
-                    self.write_to_file(data, file_name)
+                    if not self.use_kafka:
+                        self.write_to_file(data, file_name)
+                    else:
+                        self.write_to_kafka(data, file_name)
             page += 1
             logger.info(f"Crawl {len(news_urls)} in {round(time.time() - begin, 2)}s")
+
+
+if __name__ == "__main__":
+    url = {
+        # 'https://nhipcaudautu.vn/tai-chinh/': "finance",
+        'https://nhipcaudautu.vn/cong-nghe/': "fintech",
+        'https://nhipcaudautu.vn/the-gioi/': "market",
+        'https://nhipcaudautu.vn/kinh-doanh/': "market"
+    }
+    for key, value in url.items():
+        job = NCDTCrawler(url=key, tag=value, start_page=1)
+        job.export_data()
