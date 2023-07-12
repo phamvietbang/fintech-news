@@ -131,6 +131,7 @@ class VnEconomyCrawler(BaseCrawler):
 
 if __name__ == "__main__":
     # job = VnEconomyCrawler(url="https://vneconomy.vn/tai-chinh.htm", tag="finance", start_page=135)
-    # job = VnEconomyCrawler(url="https://vneconomy.vn/fintech.htm", tag="fintech", start_page=1)
-    job = VnEconomyCrawler(url="https://vneconomy.vn/chung-khoan.htm", tag="stock-market", start_page=1)
+    # job = VnEconomyCrawler(url="https://vneconomy.vn/kinh-te-so.htm", tag="fintech", start_page=1)
+    # job = VnEconomyCrawler(url="https://vneconomy.vn/chung-khoan.htm", tag="stock-market", start_page=555)
+    job = VnEconomyCrawler(url="https://vneconomy.vn/kinh-te-the-gioi.htm", tag="finance", start_page=1)
     job.export_data()

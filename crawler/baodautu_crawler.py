@@ -1,11 +1,10 @@
 import json
 import time
 
-from crawler.base_crawler import BaseCrawler
-from ftfy import fix_encoding
-from selenium.webdriver import Chrome
-from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup as soup
+from ftfy import fix_encoding
+
+from crawler.base_crawler import BaseCrawler
 from utils.logger_utils import get_logger
 
 logger = get_logger('BaoDauTu Crawler')
@@ -37,45 +36,46 @@ class BaoDauTuCrawler(BaseCrawler):
         return fix_encoding(text).strip()
 
     def get_news_info(self, page_soup: soup):
-        try:
-            title = page_soup.find("div", class_="title-detail")
-            attract = page_soup.find("div", class_="sapo_detail")
-            author = page_soup.find("a", class_="author")
-            date = page_soup.find("span", class_="post-time")
-            date = self.preprocess_data(date).replace("- ", "")
-            main_content = page_soup.find("div", id="content_detail_news")
-            contents = main_content.find_all("p")
-            news_contents = []
-            for content in contents:
-                news_contents.append(self.preprocess_data(content))
-            imgs = main_content.find_all("tbody")
-            news_imgs = self.get_images(imgs)
-            tags = page_soup.find("div", "tag_detail")
-            news_tags = self.get_tags(tags)
-            result = {
-                "type": self.tag,
-                "title": self.preprocess_data(title),
-                "attract": self.preprocess_data(attract),
-                "author": self.preprocess_data(author),
-                "date": date,
-                "content": news_contents,
-                "image": news_imgs,
-                "tags": news_tags
-            }
-            return result
-        except Exception as e:
-            logger.warning(e)
-            return None
+        # try:
+        title = page_soup.find("div", class_="title-detail")
+        attract = page_soup.find("div", class_="sapo_detail")
+        author = page_soup.find("a", class_="author")
+        date = page_soup.find("span", class_="post-time")
+        date = self.preprocess_data(date).replace("- ", "")
+        main_content = page_soup.find("div", id="content_detail_news")
+        contents = main_content.find_all("p")
+        news_contents = []
+        for content in contents:
+            news_contents.append(self.preprocess_data(content))
+        imgs = main_content.find_all("tbody")
+        news_imgs = self.get_images(imgs)
+        tags = page_soup.find("div", "tag_detail")
+        news_tags = self.get_tags(tags)
+        result = {
+            "type": self.tag,
+            "title": self.preprocess_data(title),
+            "attract": self.preprocess_data(attract),
+            "author": self.preprocess_data(author),
+            "date": date,
+            "content": news_contents,
+            "image": news_imgs,
+            "tags": news_tags
+        }
+        return result
+        # except Exception as e:
+        #     logger.warning(e)
+        #     return None
 
     def get_images(self, imgs):
         news_imgs = []
         for img in imgs:
             img_info = img.find_all("td")
             if img_info:
-                img_url = img_info[0].find("img")["src"]
-                img_name = ""
+                img_url = img_info[0].find("img")
                 if not img_url:
                     continue
+                img_url = img_url['src']
+                img_name = ""
                 if len(img_info) > 1:
                     img_name = self.preprocess_data(img_info[1])
                 news_imgs.append({
@@ -126,6 +126,6 @@ class BaoDauTuCrawler(BaseCrawler):
 
 
 if __name__ == "__main__":
-    job = BaoDauTuCrawler(url="https://baodautu.vn/ngan-hang-d5", tag="finance", start_page=1)
-    # job = BaoDauTuCrawler(url="https://baodautu.vn/tai-chinh-chung-khoan-d6/", tag="stock-market", start_page=1)
+    # job = BaoDauTuCrawler(url="https://baodautu.vn/ngan-hang-d5", tag="finance", start_page=715)
+    job = BaoDauTuCrawler(url="https://baodautu.vn/tai-chinh-chung-khoan-d6/", tag="stock-market", start_page=1)
     job.export_data()
