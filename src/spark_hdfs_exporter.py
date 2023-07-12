@@ -1,24 +1,25 @@
+from prettytable import from_json
+from pyspark.errors import StreamingQueryException
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col
-from pyspark.sql.utils import StreamingQueryException
+from pyspark.sql.functions import col
 
 from configs import Settings
 from utils.logger_utils import get_logger
 
-logger = get_logger('Spark Elastic Exporter')
+logger = get_logger('Spark Hadoop Exporter')
 
 
-class SparkElasticExporter:
+class SparkHDFSExporter:
     def __init__(self, topic, kafka_uri="localhost:29092"):
         self.kafka_uri = kafka_uri
         self.topic = topic
 
     def export_data(self):
         conf = Settings.get_spark_config()
+        schema = Settings.create_data_structure()
         spark: SparkSession = (SparkSession.builder
                                .config(conf=conf)
                                .getOrCreate())
-        schema = Settings.create_data_structure()
         news_df = (
             spark.readStream.format("kafka")
             .option("kafka.bootstrap.servers", self.kafka_uri)
@@ -32,16 +33,15 @@ class SparkElasticExporter:
         while True:
             query = (
                 projected_df.writeStream
-                .option("checkpointLocation", Settings.SPARK_ES_CHECKPOINT_LOCATION)
-                .option("es.resource", f'{Settings.SPARK_ES_INDEX}/{Settings.SPARK_ES_DOC_TYPE}')
-                .outputMode(Settings.SPARK_ES_OUTPUT_MODE)
-                .format(Settings.SPARK_ES_DATA_SOURCE)
-                .start(f'{Settings.SPARK_ES_INDEX}')
+                .queryName(self.topic)
+                .outputMode(Settings.SPARK_OUTPUT_MODE)
+                .format(Settings.SPARK_DATA_SOURCE)
+                .option("path", Settings.SPARK_PATH)
+                .option("checkpointLocation", Settings.SPARK_CHECKPOINT_LOCATION)
+                .option("truncate", False)
+                .start()
             )
             try:
                 query.awaitTermination()
             except StreamingQueryException as error:
-                print('Query Exception caught:', error)
-
-
-
+                logger.error('Query Exception caught:', error)

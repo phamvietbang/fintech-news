@@ -135,12 +135,12 @@ class DDDNCrawler(BaoDauTuCrawler):
 
 if __name__ == "__main__":
     url = {
-        # 'https://diendandoanhnghiep.vn/tai-chinh-ngan-hang-c7': "finance",
-        'https://diendandoanhnghiep.vn/khoi-nghiep-c27': "fintech",
-        'https://diendandoanhnghiep.vn/xe-c243': "fintech",
-        'https://diendandoanhnghiep.vn/quoc-te-c24': "market",
-        'https://diendandoanhnghiep.vn/dau-tu-chung-khoan-c124': "stock-market",
+        'https://diendandoanhnghiep.vn/tai-chinh-ngan-hang-c7': "finance",
+        # 'https://diendandoanhnghiep.vn/khoi-nghiep-c27': "fintech",
+        # 'https://diendandoanhnghiep.vn/xe-c243': "fintech",
+        # 'https://diendandoanhnghiep.vn/quoc-te-c24': "market",
+        # 'https://diendandoanhnghiep.vn/dau-tu-chung-khoan-c124': "stock-market",
     }
     for key, value in url.items():
-        job = DDDNCrawler(url=key, tag=value, start_page=1)
+        job = DDDNCrawler(url=key, tag=value, start_page=534)
         job.export_data()
