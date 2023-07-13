@@ -21,6 +21,8 @@ class NCDTCrawler(BaoDauTuCrawler):
     def get_all_news_url(page_soup: soup):
         result = []
         div_tag = page_soup.find("div", class_="col-xs-12 col-sm-12 col-md-12 col-lg-12")
+        if not div_tag:
+            return result
         p_tags = div_tag.find_all("p", class_="entry-title")
         for tag in p_tags:
             a_tag = tag.find("a")
@@ -122,6 +124,7 @@ class NCDTCrawler(BaoDauTuCrawler):
                 data = self.fetch_data(news_url, self.get_news_info)
                 file_name = self.get_file_name(news_url)
                 if data:
+                    data["url"] = news_url
                     if not self.use_kafka:
                         self.write_to_file(data, file_name)
                     else:
@@ -132,7 +135,7 @@ class NCDTCrawler(BaoDauTuCrawler):
 
 if __name__ == "__main__":
     url = {
-        # 'https://nhipcaudautu.vn/tai-chinh/': "finance",
+        'https://nhipcaudautu.vn/tai-chinh/': "finance",
         'https://nhipcaudautu.vn/cong-nghe/': "fintech",
         'https://nhipcaudautu.vn/the-gioi/': "market",
         'https://nhipcaudautu.vn/kinh-doanh/': "market"

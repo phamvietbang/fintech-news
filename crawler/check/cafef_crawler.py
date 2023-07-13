@@ -16,19 +16,18 @@ logger = get_logger('Cafe Biz Crawler')
 class CafeBizCrawler(BaoDauTuCrawler):
     def __init__(self, url, tag, start_page, producer: KafkaProducer = None, use_kafka=False):
         super().__init__(url, tag, start_page, producer, use_kafka)
-        self.name = "cafebiz"
-        self.save_file = f"../.data"
+        self.name = "cafef"
+        self.save_file = f"../../.data"
 
     @staticmethod
     def get_all_news_url(driver):
         result = []
-
-        li_tag = driver.find_elements(By.CLASS_NAME, "item")
-        for tag in li_tag:
+        h3_tags = driver.find_elements(By.TAG_NAME, "h3")
+        for tag in h3_tags:
             a_tag = tag.find_element(By.TAG_NAME, "a")
-            href = a_tag.get_attribute('href').replace('https://m.cafebiz.vn', "")
+            href = a_tag.get_attribute('href').replace('https://m.cafef.vn', "")
 
-            result.append(f"https://cafebiz.vn{href}")
+            result.append(f"https://cafef.vn{href}")
         return result
 
     @staticmethod
@@ -43,9 +42,9 @@ class CafeBizCrawler(BaoDauTuCrawler):
         try:
             title = page_soup.find("h1", class_="title")
             attract = page_soup.find("h2", class_="sapo")
-            author = page_soup.find("strong", class_="detail-author")
+            author = page_soup.find("p", class_="author")
             author = self.preprocess_data(author)
-            date = page_soup.find("span", class_="time")
+            date = page_soup.find("span", class_="pdate")
             date = self.preprocess_data(date)
 
             main_content = page_soup.find("div", class_="detail-content")
@@ -56,7 +55,7 @@ class CafeBizCrawler(BaoDauTuCrawler):
 
             imgs = main_content.find_all("figure")
             news_imgs = self.get_images(imgs)
-            tags = page_soup.find("span", "tags-item")
+            tags = page_soup.find("div", "tags-detail")
             news_tags = self.get_tags(tags)
             result = {
                 "journal": self.name,
@@ -115,7 +114,7 @@ class CafeBizCrawler(BaoDauTuCrawler):
 
     @staticmethod
     def get_crawled_url():
-        with open("../.data/crawled_url.json", "r") as f:
+        with open("../../.data/crawled_url.json", "r") as f:
             data = json.loads(f.read())
         if not data:
             return []
@@ -123,7 +122,7 @@ class CafeBizCrawler(BaoDauTuCrawler):
 
     @staticmethod
     def write_crawled_url(data):
-        with open("../.data/crawled_url.json", "w") as f:
+        with open("../../.data/crawled_url.json", "w") as f:
             json.dump(data, f)
 
     def export_data(self):
@@ -154,7 +153,7 @@ class CafeBizCrawler(BaoDauTuCrawler):
                 logger.info(f"Crawl {len(news_urls)} in {round(time.time() - begin, 2)}s")
                 if old_length == len(crawled_url):
                     break
-                driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.END)
+                driver.find_element(By.CLASS_NAME, 'btn-viewmore').click()
                 time.sleep(3)
             self.write_crawled_url(crawled_url)
         except Exception as e:
@@ -165,9 +164,12 @@ class CafeBizCrawler(BaoDauTuCrawler):
 
 if __name__ == "__main__":
     url = {
-        'https://cafebiz.vn/cau-chuyen-kinh-doanh.chn': "finance",
-        'https://cafebiz.vn/cong-nghe.chn': "fintech",
-        'https://cafebiz.vn/vi-mo.chn': "market",
+        'https://cafef.vn/tai-chinh-ngan-hang.chn': "finance",
+        'https://cafef.vn/tai-chinh-quoc-te.chn': 'finance',
+        'https://cafef.vn/thi-truong-chung-khoan.chn': "stock-market",
+        'https://cafef.vn/kinh-te-so.chn': "fintech",
+        "https://cafef.vn/thi-truong.chn": "market",
+        "https://cafef.vn/vi-mo-dau-tu.chn": "market"
     }
     for key, value in url.items():
         job = CafeBizCrawler(url=key, tag=value, start_page=1)

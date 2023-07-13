@@ -21,6 +21,8 @@ class VnEconomyCrawler(BaoDauTuCrawler):
     def get_all_news_url(page_soup: soup):
         result = []
         h3_tags = page_soup.find_all("header", class_="story__header")
+        if not h3_tags:
+            return result
         for tag in h3_tags:
             a_tag = tag.find("a")
             result.append(f"https://vneconomy.vn{a_tag['href']}")
@@ -122,6 +124,7 @@ class VnEconomyCrawler(BaoDauTuCrawler):
                 data = self.fetch_data(news_url, self.get_news_info)
                 file_name = self.get_file_name(news_url)
                 if data:
+                    data["url"] = news_url
                     if not self.use_kafka:
                         self.write_to_file(data, file_name)
                     else:

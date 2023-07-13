@@ -8,25 +8,23 @@ from kafka import KafkaProducer
 from crawler.baodautu_crawler import BaoDauTuCrawler
 from utils.logger_utils import get_logger
 
-logger = get_logger('DDDN Crawler')
+logger = get_logger('DanTri Crawler')
 
 
-class DDDNCrawler(BaoDauTuCrawler):
+class DanTriCrawler(BaoDauTuCrawler):
     def __init__(self, url, tag, start_page, producer: KafkaProducer = None, use_kafka=False):
         super().__init__(url, tag, start_page, producer, use_kafka)
-        self.name = "diendandoanhnghiep"
+        self.name = "dantri"
         self.save_file = f"../.data"
 
     @staticmethod
     def get_all_news_url(page_soup: soup):
         result = []
-        div_tag = page_soup.find("div", "danh-sach-bai-viet")
-        if not div_tag:
-            return result
-        h2_tags = div_tag.find_all("h2", class_="post-title")
+        div_tag = page_soup.find("div", "article list")
+        h2_tags = div_tag.find_all("h3", class_="article-title")
         for tag in h2_tags:
             a_tag = tag.find("a")
-            result.append(a_tag['href'])
+            result.append(f"https://dantri.com.vn{a_tag['href']}")
         return result
 
     @staticmethod
@@ -39,24 +37,21 @@ class DDDNCrawler(BaoDauTuCrawler):
 
     def get_news_info(self, page_soup: soup):
         try:
-            title = page_soup.find("h1", class_="post-title")
-            attract = page_soup.find("h2", class_="post-sapo")
-            author = page_soup.find("div", class_="post-author-share")
+            title = page_soup.find("h1", class_="title-page detail")
+            attract = page_soup.find("h2", class_="singular-sapo")
+            author = page_soup.find("div", class_="author-name")
             author = self.preprocess_data(author)
-            if author:
-                author = author.split("|")[0].strip()
-            date = page_soup.find("span", "created_time")
-            date = self.preprocess_data(date).replace(",", "")
+            date = page_soup.find("time", "author-time")["datetime"]
 
-            main_content = page_soup.find("div", class_="post-content")
+            main_content = page_soup.find("div", class_="singular-content")
             contents = main_content.find_all("p")
             news_contents = []
             for content in contents:
                 news_contents.append(self.preprocess_data(content))
 
-            imgs = main_content.find_all("div", class_="image_center_wp")
+            imgs = main_content.find_all("figure", class_="image")
             news_imgs = self.get_images(imgs)
-            tags = page_soup.find("div", "block-content")
+            tags = page_soup.find("ul", "tags-wrap")
             news_tags = self.get_tags(tags)
             result = {
                 "journal": self.name,
@@ -90,15 +85,15 @@ class DDDNCrawler(BaoDauTuCrawler):
             img_url = img.find("img")
             if not img_url:
                 continue
-            img_url = img_url["src"]
-            img_name = img.find("p", class_="image_caption")
+            img_url = img_url["data-src"]
+            img_name = img.find("figcaption")
 
             if img_name:
                 img_name = self.preprocess_data(img_name)
             else:
                 img_name = ""
             news_imgs.append({
-                "url": f"https://diendandoanhnghiep.vn{img_url}",
+                "url": img_url,
                 "title": img_name
             })
         return news_imgs
@@ -118,7 +113,7 @@ class DDDNCrawler(BaoDauTuCrawler):
 
         while True:
             begin = time.time()
-            url = f"{self.url}/page-{page}.html"
+            url = f"{self.url}/trang-{page}.htm"
             news_urls = self.fetch_data(url, self.get_all_news_url)
             if not news_urls:
                 break
@@ -138,12 +133,11 @@ class DDDNCrawler(BaoDauTuCrawler):
 
 if __name__ == "__main__":
     url = {
-        # 'https://diendandoanhnghiep.vn/tai-chinh-ngan-hang-c7': "finance",
-        'https://diendandoanhnghiep.vn/khoi-nghiep-c27': "fintech",
-        'https://diendandoanhnghiep.vn/xe-c243': "fintech",
-        'https://diendandoanhnghiep.vn/quoc-te-c24': "market",
-        'https://diendandoanhnghiep.vn/dau-tu-chung-khoan-c124': "stock-market",
+        'https://dantri.com.vn/kinh-doanh/tai-chinh': "finance",
+        'https://dantri.com.vn/kinh-doanh/chung-khoan': "stock-market",
+        'https://dantri.com.vn/kinh-doanh/khoi-nghiep': "fintech",
+        'https://dantri.com.vn/kinh-doanh/thanh-toan-thong-minh': "fintech",
     }
     for key, value in url.items():
-        job = DDDNCrawler(url=key, tag=value, start_page=1)
+        job = DanTriCrawler(url=key, tag=value, start_page=1)
         job.export_data()

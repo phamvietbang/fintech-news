@@ -27,6 +27,8 @@ class BaoDauTuCrawler(BaseCrawler):
     def get_all_news_url(page_soup):
         result = []
         div_tags = page_soup.find_all("div", class_="desc_list_news_home")
+        if not div_tags:
+            return result
         for tag in div_tags:
             tag_a = tag.find("a")
             result.append(tag_a["href"])
@@ -123,13 +125,14 @@ class BaoDauTuCrawler(BaseCrawler):
             begin = time.time()
             url = f"{self.url}/p{page}"
             news_urls = self.fetch_data(url, self.get_all_news_url)
-            if not news_urls  or len(news_urls) <= 1:
+            if not news_urls or len(news_urls) <= 1:
                 break
             for news_url in news_urls:
                 logger.info(f"Export page {page}: {news_url}")
                 data = self.fetch_data(news_url, self.get_news_info)
                 file_name = self.get_file_name(news_url)
                 if data:
+                    data["url"] = news_url
                     if not self.use_kafka:
                         self.write_to_file(data, file_name)
                     else:
