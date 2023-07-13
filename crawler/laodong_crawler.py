@@ -8,25 +8,24 @@ from kafka import KafkaProducer
 from crawler.baodautu_crawler import BaoDauTuCrawler
 from utils.logger_utils import get_logger
 
-logger = get_logger('VietNamNet Crawler')
+logger = get_logger('LaoDong Crawler')
 
 
-class VietNamNetCrawler(BaoDauTuCrawler):
+class LaoDongCrawler(BaoDauTuCrawler):
     def __init__(self, url, tag, start_page, producer: KafkaProducer = None, use_kafka=False):
         super().__init__(url, tag, start_page, producer, use_kafka)
-        self.name = "vietnamnet"
+        self.name = "laodong"
         self.save_file = f"../test/data"
 
     @staticmethod
     def get_all_news_url(page_soup: soup):
         result = []
-        main_div = page_soup.find("div", "main")
-        div_tags = main_div.find_all("div", "container")
-        for tag in div_tags:
-            h3_tags = tag.find_all("h3")
-            for h3_tag in h3_tags:
-                a_tag = h3_tag.find("a")
-                result.append(f"https://vietnamnet.vn{a_tag['href']}")
+        main_div = page_soup.find("div", "body-content")
+        div_tag = main_div.find("div", "articles")
+        article_tags = div_tag.find_all("article")
+        for tag in article_tags:
+            a_tag = tag.find("a")
+            result.append(a_tag['href'])
         return result
 
     @staticmethod
@@ -39,20 +38,22 @@ class VietNamNetCrawler(BaoDauTuCrawler):
 
     def get_news_info(self, page_soup: soup):
         try:
-            title = page_soup.find("h1", class_="content-detail-title")
-            attract = page_soup.find("h2", class_="content-detail-sapo")
-            date = page_soup.find("div", "bread-crumb-detail__time")
-            date = self.preprocess_data(date).split(",")[-1].replace("- ", "")
+            title = page_soup.find("h1", class_="title")
+            attract = page_soup.find("div", class_="chappeau")
+            author = page_soup.find("span", class_="author")
+            author = self.preprocess_data(author)
+            date = page_soup.find("span", "time")
+            date = self.preprocess_data(date).split(",")[-1]
 
-            main_content = page_soup.find("div", class_="main-content")
+            main_content = page_soup.find("div", id="gallery-ctt")
             contents = main_content.find_all("p")
             news_contents = []
             for content in contents:
                 news_contents.append(self.preprocess_data(content))
-            author = news_contents[-1]
+
             imgs = main_content.find_all("figure", class_="image")
             news_imgs = self.get_images(imgs)
-            tags = page_soup.find("div", "tag-cotnent")
+            tags = page_soup.find("div", "lst-tags")
             news_tags = self.get_tags(tags)
             result = {
                 "journal": self.name,
@@ -114,7 +115,7 @@ class VietNamNetCrawler(BaoDauTuCrawler):
 
         while True:
             begin = time.time()
-            url = f"{self.url}-page{page}"
+            url = f"{self.url}?page={page}"
             news_urls = self.fetch_data(url, self.get_all_news_url)
             if not news_urls:
                 break
@@ -134,11 +135,9 @@ class VietNamNetCrawler(BaoDauTuCrawler):
 
 if __name__ == "__main__":
     url = {
-        'https://vietnamnet.vn/kinh-doanh/tai-chinh': "finance",
-        'https://vietnamnet.vn/kinh-doanh/tu-van-tai-chinh': "finance",
-        'https://vietnamnet.vn/kinh-doanh/dau-tu': "market",
-        'https://vietnamnet.vn/kinh-doanh/thi-truong': "market",
+        'https://laodong.vn/tien-te-dau-tu': "finance",
+        'https://laodong.vn/thi-truong': "market",
     }
     for key, value in url.items():
-        job = VietNamNetCrawler(url=key, tag=value, start_page=1)
+        job = LaoDongCrawler(url=key, tag=value, start_page=1)
         job.export_data()
