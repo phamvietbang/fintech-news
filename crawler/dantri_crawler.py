@@ -15,12 +15,14 @@ class DanTriCrawler(BaoDauTuCrawler):
     def __init__(self, url, tag, start_page, producer: KafkaProducer = None, use_kafka=False):
         super().__init__(url, tag, start_page, producer, use_kafka)
         self.name = "dantri"
-        self.save_file = f"../.data"
+        self.save_file = f"../test/dantri"
 
     @staticmethod
     def get_all_news_url(page_soup: soup):
         result = []
         div_tag = page_soup.find("div", "article list")
+        if not div_tag:
+            return result
         h2_tags = div_tag.find_all("h3", class_="article-title")
         for tag in h2_tags:
             a_tag = tag.find("a")
@@ -100,6 +102,8 @@ class DanTriCrawler(BaoDauTuCrawler):
 
     def get_tags(self, tags):
         news_tags = []
+        if not tags:
+            return news_tags
         _tags = tags.find_all("a")
         if not _tags:
             return news_tags
@@ -108,10 +112,12 @@ class DanTriCrawler(BaoDauTuCrawler):
 
         return news_tags
 
-    def export_data(self):
+    def export_data(self, limit=None):
         page = self.start_page
 
         while True:
+            if limit and page==limit:
+                break
             begin = time.time()
             url = f"{self.url}/trang-{page}.htm"
             news_urls = self.fetch_data(url, self.get_all_news_url)
@@ -133,10 +139,13 @@ class DanTriCrawler(BaoDauTuCrawler):
 
 if __name__ == "__main__":
     url = {
-        'https://dantri.com.vn/kinh-doanh/tai-chinh': "finance",
-        'https://dantri.com.vn/kinh-doanh/chung-khoan': "stock-market",
-        'https://dantri.com.vn/kinh-doanh/khoi-nghiep': "fintech",
-        'https://dantri.com.vn/kinh-doanh/thanh-toan-thong-minh': "fintech",
+        # 'https://dantri.com.vn/kinh-doanh/tai-chinh': "finance",
+        # 'https://dantri.com.vn/kinh-doanh/chung-khoan': "stock-market",
+        # 'https://dantri.com.vn/kinh-doanh/khoi-nghiep': "fintech",
+        # 'https://dantri.com.vn/kinh-doanh/thanh-toan-thong-minh': "fintech",
+        # "https://dantri.com.vn/kinh-doanh/doanh-nghiep": "market",
+        "https://dantri.com.vn/kinh-doanh/tieu-dung": "market",
+
     }
     for key, value in url.items():
         job = DanTriCrawler(url=key, tag=value, start_page=1)

@@ -94,6 +94,8 @@ class BaoDauTuCrawler(BaseCrawler):
 
     def get_tags(self, tags):
         news_tags = []
+        if not tags:
+            return news_tags
         _tags = tags.find_all("a", "tag_detail_item")
         if not _tags:
             return news_tags
@@ -118,10 +120,12 @@ class BaoDauTuCrawler(BaseCrawler):
         file_name = f"{self.name}_{file_name}"
         return file_name
 
-    def export_data(self):
+    def export_data(self, limit=None):
         page = self.start_page
 
         while True:
+            if limit and page == limit:
+                break
             begin = time.time()
             url = f"{self.url}/p{page}"
             news_urls = self.fetch_data(url, self.get_all_news_url)

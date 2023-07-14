@@ -105,6 +105,8 @@ class DDDNCrawler(BaoDauTuCrawler):
 
     def get_tags(self, tags):
         news_tags = []
+        if not tags:
+            return news_tags
         _tags = tags.find_all("a")
         if not _tags:
             return news_tags
@@ -113,10 +115,11 @@ class DDDNCrawler(BaoDauTuCrawler):
 
         return news_tags
 
-    def export_data(self):
+    def export_data(self, limit=None):
         page = self.start_page
-
         while True:
+            if limit and page == limit:
+                break
             begin = time.time()
             url = f"{self.url}/page-{page}.html"
             news_urls = self.fetch_data(url, self.get_all_news_url)
@@ -140,10 +143,10 @@ if __name__ == "__main__":
     url = {
         # 'https://diendandoanhnghiep.vn/tai-chinh-ngan-hang-c7': "finance",
         'https://diendandoanhnghiep.vn/khoi-nghiep-c27': "fintech",
-        'https://diendandoanhnghiep.vn/xe-c243': "fintech",
-        'https://diendandoanhnghiep.vn/quoc-te-c24': "market",
-        'https://diendandoanhnghiep.vn/dau-tu-chung-khoan-c124': "stock-market",
+        # 'https://diendandoanhnghiep.vn/xe-c243': "fintech",
+        # 'https://diendandoanhnghiep.vn/quoc-te-c24': "market",
+        # 'https://diendandoanhnghiep.vn/dau-tu-chung-khoan-c124': "stock-market",
     }
     for key, value in url.items():
-        job = DDDNCrawler(url=key, tag=value, start_page=1)
+        job = DDDNCrawler(url=key, tag=value, start_page=820)
         job.export_data()

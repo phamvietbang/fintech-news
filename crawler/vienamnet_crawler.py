@@ -21,12 +21,18 @@ class VietNamNetCrawler(BaoDauTuCrawler):
     def get_all_news_url(page_soup: soup):
         result = []
         main_div = page_soup.find("div", "main")
+        if not main_div:
+            return result
         div_tags = main_div.find_all("div", "container")
         for tag in div_tags:
             h3_tags = tag.find_all("h3")
             for h3_tag in h3_tags:
                 a_tag = h3_tag.find("a")
-                result.append(f"https://vietnamnet.vn{a_tag['href']}")
+                href = a_tag['href']
+                if "https://vietnamnet.vn" in href:
+                    result.append(href)
+                else:
+                    result.append(f"https://vietnamnet.vn{href}")
         return result
 
     @staticmethod
@@ -101,6 +107,8 @@ class VietNamNetCrawler(BaoDauTuCrawler):
 
     def get_tags(self, tags):
         news_tags = []
+        if not tags:
+            return news_tags
         _tags = tags.find_all("a")
         if not _tags:
             return news_tags
@@ -109,10 +117,11 @@ class VietNamNetCrawler(BaoDauTuCrawler):
 
         return news_tags
 
-    def export_data(self):
+    def export_data(self, limit=None):
         page = self.start_page
-
         while True:
+            if limit and page == limit:
+                break
             begin = time.time()
             url = f"{self.url}-page{page}"
             news_urls = self.fetch_data(url, self.get_all_news_url)
@@ -128,17 +137,20 @@ class VietNamNetCrawler(BaoDauTuCrawler):
                         self.write_to_file(data, file_name)
                     else:
                         self.write_to_kafka(data, file_name)
+                # if page % 4 == 0:
+                #     time.sleep(10)
+                # time.sleep(1)
             page += 1
             logger.info(f"Crawl {len(news_urls)} in {round(time.time() - begin, 2)}s")
 
 
 if __name__ == "__main__":
     url = {
-        'https://vietnamnet.vn/kinh-doanh/tai-chinh': "finance",
-        'https://vietnamnet.vn/kinh-doanh/tu-van-tai-chinh': "finance",
+        # 'https://vietnamnet.vn/kinh-doanh/tai-chinh': "finance",
+        # 'https://vietnamnet.vn/kinh-doanh/tu-van-tai-chinh': "finance",
         'https://vietnamnet.vn/kinh-doanh/dau-tu': "market",
-        'https://vietnamnet.vn/kinh-doanh/thi-truong': "market",
+        # 'https://vietnamnet.vn/kinh-doanh/thi-truong': "market",
     }
     for key, value in url.items():
-        job = VietNamNetCrawler(url=key, tag=value, start_page=1)
+        job = VietNamNetCrawler(url=key, tag=value, start_page=389)
         job.export_data()
