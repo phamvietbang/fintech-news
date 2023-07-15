@@ -88,9 +88,8 @@ class BaseCrawler:
         except Exception as ex:
             logger.exception(ex)
         finally:
-            # driver.close()
+            # driver.quit()
             ...
-
         return data
 
     @classmethod

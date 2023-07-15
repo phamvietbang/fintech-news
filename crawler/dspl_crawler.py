@@ -8,31 +8,24 @@ from kafka import KafkaProducer
 from crawler.baodautu_crawler import BaoDauTuCrawler
 from utils.logger_utils import get_logger
 
-logger = get_logger('VietNamNet Crawler')
+logger = get_logger('PhapLuat DoiSong Crawler')
 
 
-class VietNamNetCrawler(BaoDauTuCrawler):
+class PLDSCrawler(BaoDauTuCrawler):
     def __init__(self, url, tag, start_page, producer: KafkaProducer = None, use_kafka=False):
         super().__init__(url, tag, start_page, producer, use_kafka)
-        self.name = "vietnamnet"
-        self.save_file = f"../test/data"
+        self.name = "phapluatdoisong"
+        self.save_file = f"../.data"
 
     @staticmethod
     def get_all_news_url(page_soup: soup):
         result = []
-        main_div = page_soup.find("div", "main")
-        if not main_div:
-            return result
-        div_tags = main_div.find_all("div", "container")
-        for tag in div_tags:
-            h3_tags = tag.find_all("h3")
-            for h3_tag in h3_tags:
-                a_tag = h3_tag.find("a")
-                href = a_tag['href']
-                if "https://vietnamnet.vn" in href:
-                    result.append(href)
-                else:
-                    result.append(f"https://vietnamnet.vn{href}")
+        main_section = page_soup.find("section", "more-articles")
+        h3_tags = main_section.find_all("h3", "title")
+        for tag in h3_tags:
+            a_tag = tag.find("a")
+            if "https://www.doisongphapluat.com" not in a_tag['href']:
+                result.append(f"https://www.doisongphapluat.com{a_tag['href']}")
         return result
 
     @staticmethod
@@ -45,20 +38,22 @@ class VietNamNetCrawler(BaoDauTuCrawler):
 
     def get_news_info(self, page_soup: soup):
         try:
-            title = page_soup.find("h1", class_="content-detail-title")
-            attract = page_soup.find("h2", class_="content-detail-sapo")
-            date = page_soup.find("div", "bread-crumb-detail__time")
-            date = self.preprocess_data(date).split(",")[-1].replace("- ", "")
+            title = page_soup.find("h1", class_="title")
+            attract = page_soup.find("h2", class_="sapo")
+            date = page_soup.find("div", "datetime")
+            date = self.preprocess_data(date).split(",")[-1].replace("| ", "")
 
-            main_content = page_soup.find("div", class_="main-content")
+            main_content = page_soup.find("section", class_="article-content")
             contents = main_content.find_all("p")
+            author = contents[-2].find("strong")
+            author = self.preprocess_data(author)
             news_contents = []
-            for content in contents:
+            for content in contents[:-2]:
                 news_contents.append(self.preprocess_data(content))
-            author = news_contents[-1]
+
             imgs = main_content.find_all("figure", class_="image")
             news_imgs = self.get_images(imgs)
-            tags = page_soup.find("div", "tag-cotnent")
+            tags = page_soup.find("ul", "tags")
             news_tags = self.get_tags(tags)
             result = {
                 "journal": self.name,
@@ -119,11 +114,12 @@ class VietNamNetCrawler(BaoDauTuCrawler):
 
     def export_data(self, limit=None):
         page = self.start_page
+
         while True:
-            if limit and page == limit:
+            if limit and page==limit:
                 break
             begin = time.time()
-            url = f"{self.url}-page{page}"
+            url = f"{self.url}/page/{page}"
             news_urls = self.fetch_data(url, self.get_all_news_url)
             if not news_urls:
                 break
@@ -143,11 +139,9 @@ class VietNamNetCrawler(BaoDauTuCrawler):
 
 if __name__ == "__main__":
     url = {
-        # 'https://vietnamnet.vn/kinh-doanh/tai-chinh': "finance",
-        # 'https://vietnamnet.vn/kinh-doanh/tu-van-tai-chinh': "finance",
-        # 'https://vietnamnet.vn/kinh-doanh/dau-tu': "market",
-        'https://vietnamnet.vn/kinh-doanh/thi-truong': "market",
+        'https://www.doisongphapluat.com/c/kinh-doanh': "market",
+        'https://www.doisongphapluat.com/c/tai-chinh-4': "finance",
     }
     for key, value in url.items():
-        job = VietNamNetCrawler(url=key, tag=value, start_page=1)
+        job = PLDSCrawler(url=key, tag=value, start_page=1)
         job.export_data()

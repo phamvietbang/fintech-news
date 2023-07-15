@@ -8,31 +8,24 @@ from kafka import KafkaProducer
 from crawler.baodautu_crawler import BaoDauTuCrawler
 from utils.logger_utils import get_logger
 
-logger = get_logger('VietNamNet Crawler')
+logger = get_logger('VTC Crawler')
 
 
-class VietNamNetCrawler(BaoDauTuCrawler):
+class PLDSCrawler(BaoDauTuCrawler):
     def __init__(self, url, tag, start_page, producer: KafkaProducer = None, use_kafka=False):
         super().__init__(url, tag, start_page, producer, use_kafka)
-        self.name = "vietnamnet"
-        self.save_file = f"../test/data"
+        self.name = "vtc"
+        self.save_file = f"../.data"
 
     @staticmethod
     def get_all_news_url(page_soup: soup):
         result = []
-        main_div = page_soup.find("div", "main")
-        if not main_div:
-            return result
-        div_tags = main_div.find_all("div", "container")
-        for tag in div_tags:
-            h3_tags = tag.find_all("h3")
-            for h3_tag in h3_tags:
-                a_tag = h3_tag.find("a")
-                href = a_tag['href']
-                if "https://vietnamnet.vn" in href:
-                    result.append(href)
-                else:
-                    result.append(f"https://vietnamnet.vn{href}")
+        main_section = page_soup.find("div", "pt10")
+        h3_tags = main_section.find_all("h3", "title")
+        for tag in h3_tags:
+            a_tag = tag.find("a")
+            if "https://vtc.vn" not in a_tag['href']:
+                result.append(f"https://vtc.vn{a_tag['href']}")
         return result
 
     @staticmethod
@@ -45,20 +38,22 @@ class VietNamNetCrawler(BaoDauTuCrawler):
 
     def get_news_info(self, page_soup: soup):
         try:
-            title = page_soup.find("h1", class_="content-detail-title")
-            attract = page_soup.find("h2", class_="content-detail-sapo")
-            date = page_soup.find("div", "bread-crumb-detail__time")
-            date = self.preprocess_data(date).split(",")[-1].replace("- ", "")
+            title = page_soup.find("h1", class_="font28 bold lh-1-3")
+            attract = page_soup.find("h2", class_="font18 bold inline-nb")
+            date = page_soup.find("span", "time-update mr10 align-super")
+            date = self.preprocess_data(date).split(",")[-1]
 
-            main_content = page_soup.find("div", class_="main-content")
+            main_content = page_soup.find("div", class_="edittor-content box-cont mt15 clearfix ")
             contents = main_content.find_all("p")
+            author = page_soup.find("div", class_="author-maker")
+            author = self.preprocess_data(author)
             news_contents = []
             for content in contents:
                 news_contents.append(self.preprocess_data(content))
-            author = news_contents[-1]
-            imgs = main_content.find_all("figure", class_="image")
+
+            imgs = main_content.find_all("figure")
             news_imgs = self.get_images(imgs)
-            tags = page_soup.find("div", "tag-cotnent")
+            tags = page_soup.find("ul", "keylink font13")
             news_tags = self.get_tags(tags)
             result = {
                 "journal": self.name,
@@ -119,11 +114,12 @@ class VietNamNetCrawler(BaoDauTuCrawler):
 
     def export_data(self, limit=None):
         page = self.start_page
+
         while True:
-            if limit and page == limit:
+            if limit and page==limit:
                 break
             begin = time.time()
-            url = f"{self.url}-page{page}"
+            url = f"{self.url}/trang-{page}.html"
             news_urls = self.fetch_data(url, self.get_all_news_url)
             if not news_urls:
                 break
@@ -143,11 +139,10 @@ class VietNamNetCrawler(BaoDauTuCrawler):
 
 if __name__ == "__main__":
     url = {
-        # 'https://vietnamnet.vn/kinh-doanh/tai-chinh': "finance",
-        # 'https://vietnamnet.vn/kinh-doanh/tu-van-tai-chinh': "finance",
-        # 'https://vietnamnet.vn/kinh-doanh/dau-tu': "market",
-        'https://vietnamnet.vn/kinh-doanh/thi-truong': "market",
+        'https://vtc.vn/tai-chinh-200': "finance",
+        'https://vtc.vn/dau-tu-199': "market",
+        'https://vtc.vn/bao-ve-nguoi-tieu-dung-51': "market"
     }
     for key, value in url.items():
-        job = VietNamNetCrawler(url=key, tag=value, start_page=1)
+        job = PLDSCrawler(url=key, tag=value, start_page=1)
         job.export_data()

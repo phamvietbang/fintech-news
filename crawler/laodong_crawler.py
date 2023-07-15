@@ -4,6 +4,7 @@ import time
 from bs4 import BeautifulSoup as soup
 from ftfy import fix_encoding
 from kafka import KafkaProducer
+from selenium.webdriver.common.by import By
 
 from crawler.baodautu_crawler import BaoDauTuCrawler
 from utils.logger_utils import get_logger
@@ -17,15 +18,14 @@ class LaoDongCrawler(BaoDauTuCrawler):
         self.name = "laodong"
         self.save_file = f"../test/data"
 
-    @staticmethod
-    def get_all_news_url(page_soup: soup):
+    def get_all_news_url(self, page_soup):
         result = []
-        main_div = page_soup.find("div", "body-content")
-        div_tag = main_div.find("div", "articles")
-        article_tags = div_tag.find_all("article")
+        main_div = page_soup.find_element(By.CLASS_NAME, "body-content")
+        article_tags = main_div.find_elements(By.TAG_NAME, "article")
         for tag in article_tags:
-            a_tag = tag.find("a")
-            result.append(a_tag['href'])
+            a_tag = tag.find_element(By.TAG_NAME, "a")
+            result.append(a_tag.get_attribute('href'))
+        result = list(set([url for url in result if self.url in url]))
         return result
 
     @staticmethod
@@ -36,24 +36,24 @@ class LaoDongCrawler(BaoDauTuCrawler):
             return None
         return fix_encoding(text).strip()
 
-    def get_news_info(self, page_soup: soup):
+    def get_news_info(self, driver):
         try:
-            title = page_soup.find("h1", class_="title")
-            attract = page_soup.find("div", class_="chappeau")
-            author = page_soup.find("span", class_="author")
+            page_soup = driver.find_element(By.TAG_NAME, "article")
+            title = page_soup.find_element(By.CLASS_NAME, "title")
+            attract = page_soup.find_element(By.CLASS_NAME, "chappeau")
+            author = page_soup.find_element(By.TAG_NAME, "span")
             author = self.preprocess_data(author)
-            date = page_soup.find("span", "time")
+            date = page_soup.find_element(By.CLASS_NAME, "time")
             date = self.preprocess_data(date).split(",")[-1]
 
-            main_content = page_soup.find("div", id="gallery-ctt")
-            contents = main_content.find_all("p")
+            contents = page_soup.find_elements(By.TAG_NAME, "p")
             news_contents = []
             for content in contents:
                 news_contents.append(self.preprocess_data(content))
 
-            imgs = main_content.find_all("figure", class_="image")
+            imgs = page_soup.find_elements(By.XPATH, "//figure[@class='insert-center-image']")
             news_imgs = self.get_images(imgs)
-            tags = page_soup.find("div", "lst-tags")
+            tags = page_soup.find_element(By.XPATH, "//div[@class='lst-tags']")
             news_tags = self.get_tags(tags)
             result = {
                 "journal": self.name,
@@ -84,11 +84,14 @@ class LaoDongCrawler(BaoDauTuCrawler):
     def get_images(self, imgs):
         news_imgs = []
         for img in imgs:
-            img_url = img.find("img")
+            img_url = img.find_element(By.TAG_NAME, "img")
             if not img_url:
                 continue
-            img_url = img_url["src"]
-            img_name = img.find("figcaption")
+            img_url = img_url.get_attribute("src")
+            try:
+                img_name = img.find_element(By.TAG_NAME, "figcaption")
+            except:
+                img_name = None
 
             if img_name:
                 img_name = self.preprocess_data(img_name)
@@ -104,7 +107,7 @@ class LaoDongCrawler(BaoDauTuCrawler):
         news_tags = []
         if not tags:
             return news_tags
-        _tags = tags.find_all("a")
+        _tags = tags.find_elements(By.TAG_NAME, "a")
         if not _tags:
             return news_tags
         for tag in _tags:
@@ -116,25 +119,34 @@ class LaoDongCrawler(BaoDauTuCrawler):
         page = self.start_page
 
         while True:
-            if limit and page==limit:
-                break
-            begin = time.time()
-            url = f"{self.url}?page={page}"
-            news_urls = self.fetch_data(url, self.get_all_news_url)
-            if not news_urls:
-                break
-            for news_url in news_urls:
-                logger.info(f"Export page {page}: {news_url}")
-                data = self.fetch_data(news_url, self.get_news_info)
-                file_name = self.get_file_name(news_url)
-                if data:
-                    data["url"] = news_url
-                    if not self.use_kafka:
-                        self.write_to_file(data, file_name)
-                    else:
-                        self.write_to_kafka(data, file_name)
-            page += 1
-            logger.info(f"Crawl {len(news_urls)} in {round(time.time() - begin, 2)}s")
+            driver = self.get_driver()
+            try:
+                if limit and page==limit:
+                    break
+                begin = time.time()
+                url = f"{self.url}?page={page}"
+                news_urls = self.use_chrome_driver(driver, url, self.get_all_news_url)
+                if not news_urls:
+                    break
+                for news_url in news_urls:
+                    logger.info(f"Export page {page}: {news_url}")
+                    data = self.use_chrome_driver(driver, news_url, self.get_news_info)
+                    file_name = self.get_file_name(news_url)
+                    if data:
+                        data["url"] = news_url
+                        if not self.use_kafka:
+                            self.write_to_file(data, file_name)
+                        else:
+                            self.write_to_kafka(data, file_name)
+
+                page += 1
+                logger.info(f"Crawl {len(news_urls)} in {round(time.time() - begin, 2)}s")
+            except Exception as e:
+                page += 1
+                logger.error(e)
+                pass
+            finally:
+                driver.quit()
 
 
 if __name__ == "__main__":
