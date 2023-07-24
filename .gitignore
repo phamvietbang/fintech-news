@@ -162,3 +162,5 @@ cython_debug/
 test
 data
 .idea
+imgs
+imgs2

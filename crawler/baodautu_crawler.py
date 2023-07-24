@@ -19,7 +19,7 @@ class BaoDauTuCrawler(BaseCrawler):
         self.start_page = start_page
         self.tag = tag
         self.url = url
-        self.save_file = f"../data"
+        self.save_file = f"./data"
         self.producer = producer
         self.name = 'baodautu'
 

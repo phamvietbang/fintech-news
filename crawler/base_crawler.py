@@ -96,9 +96,30 @@ class BaseCrawler:
     def get_driver(cls):
         chrome_options = Options()
         chrome_options.add_argument('--headless')
+        # run Selenium in headless mode
+        chrome_options.add_argument('--no-sandbox')
+        # overcome limited resource problems
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument("lang=en")
+        # open Browser in maximized mode
+        chrome_options.add_argument("start-maximized")
+        # disable infobars
+        chrome_options.add_argument("disable-infobars")
+        # disable extension
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument("--incognito")
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         chrome_options.add_argument('user-agent=Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Mobile Safari/537.36')
         driver = webdriver.Chrome(options=chrome_options)
         return driver
+
+    @staticmethod
+    def crawl_img(url):
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
+        }
+        response = requests.get(url, headers=headers)
+        return response.content
 
 
 if __name__ == '__main__':

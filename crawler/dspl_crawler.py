@@ -15,7 +15,7 @@ class PLDSCrawler(BaoDauTuCrawler):
     def __init__(self, url, tag, start_page, producer: KafkaProducer = None, use_kafka=False):
         super().__init__(url, tag, start_page, producer, use_kafka)
         self.name = "phapluatdoisong"
-        self.save_file = f"../.data"
+        self.save_file = f"./data"
 
     @staticmethod
     def get_all_news_url(page_soup: soup):
@@ -114,15 +114,16 @@ class PLDSCrawler(BaoDauTuCrawler):
 
     def export_data(self, limit=None):
         page = self.start_page
-
+        old_urls = []
         while True:
             if limit and page==limit:
                 break
             begin = time.time()
             url = f"{self.url}/page/{page}"
             news_urls = self.fetch_data(url, self.get_all_news_url)
-            if not news_urls:
+            if not news_urls or news_urls == old_urls:
                 break
+            old_urls = news_urls
             for news_url in news_urls:
                 logger.info(f"Export page {page}: {news_url}")
                 data = self.fetch_data(news_url, self.get_news_info)

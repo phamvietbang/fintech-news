@@ -4,3 +4,4 @@ selenium
 ftfy
 kafka-python==2.0.2
 pyspark==3.4.0
+click==8.1.3

@@ -11,17 +11,16 @@ from utils.logger_utils import get_logger
 logger = get_logger('VTC Crawler')
 
 
-class PLDSCrawler(BaoDauTuCrawler):
+class VTCCrawler(BaoDauTuCrawler):
     def __init__(self, url, tag, start_page, producer: KafkaProducer = None, use_kafka=False):
         super().__init__(url, tag, start_page, producer, use_kafka)
         self.name = "vtc"
-        self.save_file = f"../.data"
+        self.save_file = f"./data"
 
     @staticmethod
     def get_all_news_url(page_soup: soup):
         result = []
-        main_section = page_soup.find("div", "pt10")
-        h3_tags = main_section.find_all("h3", "title")
+        h3_tags = page_soup.find_all("h3")
         for tag in h3_tags:
             a_tag = tag.find("a")
             if "https://vtc.vn" not in a_tag['href']:
@@ -43,9 +42,9 @@ class PLDSCrawler(BaoDauTuCrawler):
             date = page_soup.find("span", "time-update mr10 align-super")
             date = self.preprocess_data(date).split(",")[-1]
 
-            main_content = page_soup.find("div", class_="edittor-content box-cont mt15 clearfix ")
+            main_content = page_soup.find("div", class_="edittor-content")
             contents = main_content.find_all("p")
-            author = page_soup.find("div", class_="author-maker")
+            author = page_soup.find("div", class_="author-make")
             author = self.preprocess_data(author)
             news_contents = []
             for content in contents:
@@ -114,15 +113,16 @@ class PLDSCrawler(BaoDauTuCrawler):
 
     def export_data(self, limit=None):
         page = self.start_page
-
+        old_urls = []
         while True:
             if limit and page==limit:
                 break
             begin = time.time()
             url = f"{self.url}/trang-{page}.html"
             news_urls = self.fetch_data(url, self.get_all_news_url)
-            if not news_urls:
+            if not news_urls or old_urls == news_urls:
                 break
+            old_urls = news_urls
             for news_url in news_urls:
                 logger.info(f"Export page {page}: {news_url}")
                 data = self.fetch_data(news_url, self.get_news_info)
@@ -139,10 +139,10 @@ class PLDSCrawler(BaoDauTuCrawler):
 
 if __name__ == "__main__":
     url = {
-        'https://vtc.vn/tai-chinh-200': "finance",
+        # 'https://vtc.vn/tai-chinh-200': "finance",
         'https://vtc.vn/dau-tu-199': "market",
         'https://vtc.vn/bao-ve-nguoi-tieu-dung-51': "market"
     }
     for key, value in url.items():
-        job = PLDSCrawler(url=key, tag=value, start_page=1)
+        job = VTCCrawler(url=key, tag=value, start_page=1)
         job.export_data()

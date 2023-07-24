@@ -16,7 +16,7 @@ class LaoDongCrawler(BaoDauTuCrawler):
     def __init__(self, url, tag, start_page, producer: KafkaProducer = None, use_kafka=False):
         super().__init__(url, tag, start_page, producer, use_kafka)
         self.name = "laodong"
-        self.save_file = f"../test/data"
+        self.save_file = f"./data"
 
     def get_all_news_url(self, page_soup):
         result = []
@@ -50,11 +50,16 @@ class LaoDongCrawler(BaoDauTuCrawler):
             news_contents = []
             for content in contents:
                 news_contents.append(self.preprocess_data(content))
+            try:
+                imgs = page_soup.find_elements(By.XPATH, "//figure[@class='insert-center-image']")
+                news_imgs = self.get_images(imgs)
 
-            imgs = page_soup.find_elements(By.XPATH, "//figure[@class='insert-center-image']")
-            news_imgs = self.get_images(imgs)
-            tags = page_soup.find_element(By.XPATH, "//div[@class='lst-tags']")
-            news_tags = self.get_tags(tags)
+                tags = page_soup.find_element(By.XPATH, "//div[@class='lst-tags']")
+                news_tags = self.get_tags(tags)
+            except:
+                news_tags = []
+                news_imgs = []
+                pass
             result = {
                 "journal": self.name,
                 "type": self.tag,
@@ -117,7 +122,7 @@ class LaoDongCrawler(BaoDauTuCrawler):
 
     def export_data(self, limit=None):
         page = self.start_page
-
+        old_urls = []
         while True:
             driver = self.get_driver()
             try:
@@ -126,8 +131,10 @@ class LaoDongCrawler(BaoDauTuCrawler):
                 begin = time.time()
                 url = f"{self.url}?page={page}"
                 news_urls = self.use_chrome_driver(driver, url, self.get_all_news_url)
-                if not news_urls:
+
+                if not news_urls or old_urls == news_urls:
                     break
+                old_urls = news_urls
                 for news_url in news_urls:
                     logger.info(f"Export page {page}: {news_url}")
                     data = self.use_chrome_driver(driver, news_url, self.get_news_info)
@@ -152,8 +159,8 @@ class LaoDongCrawler(BaoDauTuCrawler):
 if __name__ == "__main__":
     url = {
         'https://laodong.vn/tien-te-dau-tu': "finance",
-        'https://laodong.vn/thi-truong': "market",
+        # 'https://laodong.vn/thi-truong': "market",
     }
     for key, value in url.items():
-        job = LaoDongCrawler(url=key, tag=value, start_page=1)
+        job = LaoDongCrawler(url=key, tag=value, start_page=4)
         job.export_data()

@@ -15,7 +15,7 @@ class VietNamNetCrawler(BaoDauTuCrawler):
     def __init__(self, url, tag, start_page, producer: KafkaProducer = None, use_kafka=False):
         super().__init__(url, tag, start_page, producer, use_kafka)
         self.name = "vietnamnet"
-        self.save_file = f"../test/data"
+        self.save_file = f"./data"
 
     @staticmethod
     def get_all_news_url(page_soup: soup):

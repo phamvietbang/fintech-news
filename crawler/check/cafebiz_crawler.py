@@ -121,20 +121,17 @@ class CafeBizCrawler(BaoDauTuCrawler):
             return []
         return data
 
-    @staticmethod
-    def write_crawled_url(data):
-        with open("../../.data/crawled_url.json", "w") as f:
-            json.dump(data, f)
-
     def export_data(self):
         page = self.start_page
         driver = self.get_driver()
-        crawled_url = self.get_crawled_url()
+        crawled_url = []
+        driver.get(self.url)
+        driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.END)
         try:
             while True:
+                time.sleep(3)
                 begin = time.time()
-                old_length = len(crawled_url)
-                news_urls = self.use_chrome_driver(driver, self.url, self.get_all_news_url)
+                news_urls = self.get_all_news_url(driver)
                 if not news_urls:
                     break
                 for news_url in news_urls:
@@ -152,16 +149,21 @@ class CafeBizCrawler(BaoDauTuCrawler):
                             self.write_to_kafka(data, file_name)
                 page += 1
                 logger.info(f"Crawl {len(news_urls)} in {round(time.time() - begin, 2)}s")
-                if old_length == len(crawled_url):
-                    break
                 driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.END)
-                time.sleep(3)
-            self.write_crawled_url(crawled_url)
+                self.click_load_more(driver)
+
+                page +=1
         except Exception as e:
             logger.error(e)
         finally:
             driver.quit()
 
+    def click_load_more(self, driver):
+        try:
+            driver.find_element(By.CLASS_NAME, "load-more-cell").click()
+        except Exception as e:
+            logger.error(e)
+            pass
 
 if __name__ == "__main__":
     url = {
