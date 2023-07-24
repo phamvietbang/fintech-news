@@ -1,3 +1,4 @@
+import base64
 import json
 import time
 
@@ -93,15 +94,19 @@ class VietNamNetCrawler(BaoDauTuCrawler):
             if not img_url:
                 continue
             img_url = img_url["src"]
+            if "http" not in img_url:
+                img_url = f"{self.img_url_prefix}{img_url}"
             img_name = img.find("figcaption")
-
+            img_content = self.crawl_img(img_url)
+            img_content = base64.b64encode(img_content).decode()
             if img_name:
                 img_name = self.preprocess_data(img_name)
             else:
                 img_name = ""
             news_imgs.append({
                 "url": img_url,
-                "title": img_name
+                "title": img_name,
+                "content": img_content
             })
         return news_imgs
 
@@ -139,15 +144,3 @@ class VietNamNetCrawler(BaoDauTuCrawler):
                         self.write_to_kafka(data, file_name)
             page += 1
             logger.info(f"Crawl {len(news_urls)} in {round(time.time() - begin, 2)}s")
-
-
-if __name__ == "__main__":
-    url = {
-        # 'https://vietnamnet.vn/kinh-doanh/tai-chinh': "finance",
-        # 'https://vietnamnet.vn/kinh-doanh/tu-van-tai-chinh': "finance",
-        # 'https://vietnamnet.vn/kinh-doanh/dau-tu': "market",
-        'https://vietnamnet.vn/kinh-doanh/thi-truong': "market",
-    }
-    for key, value in url.items():
-        job = VietNamNetCrawler(url=key, tag=value, start_page=1)
-        job.export_data()

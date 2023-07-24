@@ -1,3 +1,4 @@
+import base64
 import json
 import pickle
 import time
@@ -6,6 +7,7 @@ from bs4 import BeautifulSoup as soup
 from ftfy import fix_encoding
 from kafka import KafkaProducer
 
+from constants import ImageUrls
 from crawler.base_crawler import BaseCrawler
 from utils.logger_utils import get_logger
 
@@ -22,6 +24,7 @@ class BaoDauTuCrawler(BaseCrawler):
         self.save_file = f"./data"
         self.producer = producer
         self.name = 'baodautu'
+        self.img_url_prefix = ImageUrls.mapping.get(self.name)
 
     @staticmethod
     def get_all_news_url(page_soup):
@@ -83,12 +86,17 @@ class BaoDauTuCrawler(BaseCrawler):
                 if not img_url:
                     continue
                 img_url = img_url['src']
+                if "http" not in img_url:
+                    img_url = f"{self.img_url_prefix}{img_url}"
+                img_content = self.crawl_img(img_url)
+                img_content = base64.b64encode(img_content).decode()
                 img_name = ""
                 if len(img_info) > 1:
                     img_name = self.preprocess_data(img_info[1])
                 news_imgs.append({
                     "url": img_url,
-                    "title": img_name
+                    "title": img_name,
+                    "content": img_content
                 })
         return news_imgs
 
@@ -143,10 +151,3 @@ class BaoDauTuCrawler(BaseCrawler):
                         self.write_to_kafka(data, file_name)
             page += 1
             logger.info(f"Crawl {len(news_urls)} in {round(time.time() - begin, 2)}s")
-
-
-if __name__ == "__main__":
-    # job = BaoDauTuCrawler(url="https://baodautu.vn/ngan-hang-d5", tag="finance", start_page=715)
-    # job = BaoDauTuCrawler(url="https://baodautu.vn/tai-chinh-chung-khoan-d6/", tag="stock-market", start_page=1)
-    job = BaoDauTuCrawler(url="https://baodautu.vn/quoc-te-d54/", tag="market", start_page=1)
-    job.export_data()

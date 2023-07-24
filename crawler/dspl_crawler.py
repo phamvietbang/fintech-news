@@ -1,3 +1,4 @@
+import base64
 import json
 import time
 
@@ -88,15 +89,19 @@ class PLDSCrawler(BaoDauTuCrawler):
             if not img_url:
                 continue
             img_url = img_url["src"]
+            if "http" not in img_url:
+                img_url = f"{self.img_url_prefix}{img_url}"
             img_name = img.find("figcaption")
-
+            img_content = self.crawl_img(img_url)
+            img_content = base64.b64encode(img_content).decode()
             if img_name:
                 img_name = self.preprocess_data(img_name)
             else:
                 img_name = ""
             news_imgs.append({
                 "url": img_url,
-                "title": img_name
+                "title": img_name,
+                "content": img_content
             })
         return news_imgs
 
@@ -136,13 +141,3 @@ class PLDSCrawler(BaoDauTuCrawler):
                         self.write_to_kafka(data, file_name)
             page += 1
             logger.info(f"Crawl {len(news_urls)} in {round(time.time() - begin, 2)}s")
-
-
-if __name__ == "__main__":
-    url = {
-        'https://www.doisongphapluat.com/c/kinh-doanh': "market",
-        'https://www.doisongphapluat.com/c/tai-chinh-4': "finance",
-    }
-    for key, value in url.items():
-        job = PLDSCrawler(url=key, tag=value, start_page=1)
-        job.export_data()

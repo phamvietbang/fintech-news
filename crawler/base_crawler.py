@@ -115,42 +115,13 @@ class BaseCrawler:
 
     @staticmethod
     def crawl_img(url):
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
-        }
-        response = requests.get(url, headers=headers)
-        return response.content
-
-
-if __name__ == '__main__':
-    def handler_exchanges(driver):
-        time.sleep(10)
-
-        screen_height = driver.execute_script("return window.screen.height;")  # get the screen height of the web
-
-        i = 1
-        while True:
-            # scroll one screen height each time
-            driver.execute_script("window.scrollTo(0, {screen_height}*{i});".format(screen_height=screen_height, i=i))
-            i += 1
-            page_soup = soup(driver.page_source, 'html.parser')
-            table = page_soup.find('app-trade-history')
-            rows = table.findAll('datatable-body-row')
-            for row in rows:
-                cols = row.find('div', {'class': 'datatable-row-center'}).findAll('datatable-body-cell')
-                bot_icon = cols[-1].find('fa-icon')
-                if 'ng-star-inserted' in bot_icon.get('class'):
-                    bot_or_contract_trading = True
-                    logger.info(f'Trading by bot or contract {bot_or_contract_trading}')
-
-            time.sleep(1)
-            # update scroll height each time after scrolled, as the scroll height can change after we scrolled the page
-            scroll_height = driver.execute_script("return document.body.scrollHeight;")
-            # Break the loop when the height we need to scroll to is larger than the total scroll height
-            if screen_height * i > scroll_height:
-                break
-
-    crawler = BaseCrawler()
-    url_ = 'https://www.dextools.io/app/en/bnb/pair-explorer/0x865c77d4ff6383e06c58350a2cfb95cca2c0f056'
-    crawler.use_chrome_driver(url_, handler_exchanges)
+        try:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
+            }
+            response = requests.get(url, headers=headers)
+            return response.content
+        except Exception as e:
+            logger.warning(e)
+            return ""
 

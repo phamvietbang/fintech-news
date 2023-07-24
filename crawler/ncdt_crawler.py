@@ -1,3 +1,4 @@
+import base64
 import json
 import time
 
@@ -91,12 +92,17 @@ class NCDTCrawler(BaoDauTuCrawler):
                 if not img_url:
                     continue
                 img_url = img_url["src"]
+                if "http" not in img_url:
+                    img_url = f"{self.img_url_prefix}{img_url}"
+                img_content = self.crawl_img(img_url)
+                img_content = base64.b64encode(img_content).decode()
                 img_name = ""
                 if len(img_info) > 1:
                     img_name = self.preprocess_data(img_info[1])
                 news_imgs.append({
                     "url": img_url,
-                    "title": img_name
+                    "title": img_name,
+                    "content": img_content
                 })
         return news_imgs
 
@@ -135,15 +141,3 @@ class NCDTCrawler(BaoDauTuCrawler):
                         self.write_to_kafka(data, file_name)
             page += 1
             logger.info(f"Crawl {len(news_urls)} in {round(time.time() - begin, 2)}s")
-
-
-if __name__ == "__main__":
-    url = {
-        'https://nhipcaudautu.vn/tai-chinh/': "finance",
-        'https://nhipcaudautu.vn/cong-nghe/': "fintech",
-        'https://nhipcaudautu.vn/the-gioi/': "market",
-        'https://nhipcaudautu.vn/kinh-doanh/': "market"
-    }
-    for key, value in url.items():
-        job = NCDTCrawler(url=key, tag=value, start_page=1)
-        job.export_data()

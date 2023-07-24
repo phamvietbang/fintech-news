@@ -113,6 +113,6 @@ class CrawlingJob:
             job.export_data(self.end_page)
 
 
-if __name__ == "__main__":
-    job = CrawlingJob(['baodautu', 'dantri'], 1, 2)
-    job.run()
+# if __name__ == "__main__":
+#     job = CrawlingJob(['baodautu', 'dantri'], 1, 2)
+#     job.run()

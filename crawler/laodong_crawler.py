@@ -1,3 +1,4 @@
+import base64
 import json
 import time
 
@@ -93,10 +94,15 @@ class LaoDongCrawler(BaoDauTuCrawler):
             if not img_url:
                 continue
             img_url = img_url.get_attribute("src")
+            if "http" not in img_url:
+                img_url = f"{self.img_url_prefix}{img_url}"
             try:
+                img_content = self.crawl_img(img_url)
+                img_content = base64.b64encode(img_content).decode()
                 img_name = img.find_element(By.TAG_NAME, "figcaption")
             except:
-                img_name = None
+                img_name = ""
+                img_content = ""
 
             if img_name:
                 img_name = self.preprocess_data(img_name)
@@ -104,7 +110,8 @@ class LaoDongCrawler(BaoDauTuCrawler):
                 img_name = ""
             news_imgs.append({
                 "url": img_url,
-                "title": img_name
+                "title": img_name,
+                "content": img_content
             })
         return news_imgs
 
@@ -154,13 +161,3 @@ class LaoDongCrawler(BaoDauTuCrawler):
                 pass
             finally:
                 driver.quit()
-
-
-if __name__ == "__main__":
-    url = {
-        'https://laodong.vn/tien-te-dau-tu': "finance",
-        # 'https://laodong.vn/thi-truong': "market",
-    }
-    for key, value in url.items():
-        job = LaoDongCrawler(url=key, tag=value, start_page=4)
-        job.export_data()

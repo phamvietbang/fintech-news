@@ -10,6 +10,19 @@ class JobName:
     vtc = 'vtc'
 
 
+class ImageUrls:
+    mapping = {
+        "baodautu": "https://media.baodautu.vn/",
+        "dantri": "https://icdn.dantri.com.vn",
+        "doisongphapluat": "https://media.doisongphapluat.com",
+        "diendandoanhnghiep": 'https://diendandoanhnghiep.vn',
+        "vneconomy": "https://media.vneconomy.vn",
+        "vietnamnet": "https://static-images.vnncdn.net",
+        "nhipcaudautu": "https://imgst.nhipcaudautu.vn/",
+        "vtc": "https://cdn-i.vtcnews.vn"
+    }
+
+
 class Urls:
     baodautu = {
         "https://baodautu.vn/ngan-hang-d5": "finance",
