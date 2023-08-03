@@ -27,27 +27,27 @@ class Settings:
     @staticmethod
     def get_spark_config():
         conf = SparkConf()
-        conf.setMaster(Settings.SPARK_MASTER)
-        conf.setAppName(Settings.SPARK_APP_NAME)
+        # conf.setMaster(Settings.SPARK_MASTER)
+        # conf.setAppName(Settings.SPARK_APP_NAME)
         conf.set("spark.streaming.kafka.consumer.poll.ms", "512")
         conf.set("spark.executor.heartbeatInterval", "20s")
         conf.set("spark.network.timeout", "1200s")
-        conf.set("es.nodes", Settings.ES_HOST)
-        conf.set("es.port", Settings.ES_PORT)
-        conf.set("es.net.http.auth.user", Settings.ES_USERNAME)
-        conf.set("es.net.http.auth.pass", Settings.ES_PASSWORD)
-        conf.set("es.net.ssl", "true")
-        conf.set("es.nodes.resolve.hostname", "false")
-        conf.set("es.net.ssl.cert.allow.self.signed", "true")
-        conf.set("es.nodes.wan.only", "true")
-        conf.set("es.nodes.discovery", "false")
-        conf.set("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.0")
+        # conf.set("es.nodes", Settings.ES_HOST)
+        # conf.set("es.port", Settings.ES_PORT)
+        # conf.set("es.net.http.auth.user", Settings.ES_USERNAME)
+        # conf.set("es.net.http.auth.pass", Settings.ES_PASSWORD)
+        # conf.set("es.net.ssl", "true")
+        # conf.set("es.nodes.resolve.hostname", "false")
+        # conf.set("es.net.ssl.cert.allow.self.signed", "true")
+        # conf.set("es.nodes.wan.only", "true")
+        # conf.set("es.nodes.discovery", "false")
+
         return conf
 
     @staticmethod
     def create_data_structure():
         schema = StructType([
-            StructField("_id", StringType(), False),
+            StructField("id", StringType(), False),
             StructField("journal", StringType(), False),
             StructField("type", StringType(), False),
             StructField("title", StringType(), False),
@@ -62,3 +62,13 @@ class Settings:
             StructField("tags", ArrayType(StringType()), True),
         ])
         return schema
+
+def parse_data_from_kafka_message(sdf):
+    from pyspark.sql.functions import split
+    assert sdf.isStreaming == True, "DataFrame doesn't receive treaming data"
+    schema = Settings.create_data_structure()
+    col = split(sdf['value'], ',')  # split attributes to nested array in one Column
+    # now expand col to multiple top-level columns
+    for idx, field in enumerate(schema):
+        sdf = sdf.withColumn(field.name, col.getItem(idx).cast(field.dataType))
+    return sdf.select([field.name for field in schema])

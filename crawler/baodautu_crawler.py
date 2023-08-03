@@ -15,7 +15,7 @@ logger = get_logger('BaoDauTu Crawler')
 
 
 class BaoDauTuCrawler(BaseCrawler):
-    def __init__(self, url, tag, start_page, producer: KafkaProducer=None, use_kafka=False):
+    def __init__(self, url, tag, start_page, producer: KafkaProducer = None, use_kafka=False):
         super().__init__()
         self.use_kafka = use_kafka
         self.start_page = start_page
@@ -151,3 +151,14 @@ class BaoDauTuCrawler(BaseCrawler):
                         self.write_to_kafka(data, file_name)
             page += 1
             logger.info(f"Crawl {len(news_urls)} in {round(time.time() - begin, 2)}s")
+
+
+if __name__ == "__main__":
+    url = "https://baodautu.vn/ngan-hang-d5"
+    tag = "finance"
+
+    producer = KafkaProducer(bootstrap_servers=["localhost:29092"])
+    print(f"config: {producer.config}")
+    print(f"connect: {producer.bootstrap_connected()}")
+    job = BaoDauTuCrawler(url, tag, 1, producer, use_kafka=True)
+    job.export_data()
