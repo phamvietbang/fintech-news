@@ -27,20 +27,21 @@ class Settings:
     @staticmethod
     def get_spark_config():
         conf = SparkConf()
-        # conf.setMaster(Settings.SPARK_MASTER)
-        # conf.setAppName(Settings.SPARK_APP_NAME)
+        conf.setMaster(Settings.SPARK_MASTER)
+        conf.setAppName(Settings.SPARK_APP_NAME)
+        conf.set("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.0,org.apache.spark:spark-streaming-kafka-0-10_2.12:3.4.0,org.elasticsearch:elasticsearch-spark-30_2.12:8.9.0")
         conf.set("spark.streaming.kafka.consumer.poll.ms", "512")
         conf.set("spark.executor.heartbeatInterval", "20s")
         conf.set("spark.network.timeout", "1200s")
-        # conf.set("es.nodes", Settings.ES_HOST)
-        # conf.set("es.port", Settings.ES_PORT)
-        # conf.set("es.net.http.auth.user", Settings.ES_USERNAME)
-        # conf.set("es.net.http.auth.pass", Settings.ES_PASSWORD)
-        # conf.set("es.net.ssl", "true")
-        # conf.set("es.nodes.resolve.hostname", "false")
-        # conf.set("es.net.ssl.cert.allow.self.signed", "true")
-        # conf.set("es.nodes.wan.only", "true")
-        # conf.set("es.nodes.discovery", "false")
+        conf.set("es.nodes", Settings.ES_HOST)
+        conf.set("es.port", Settings.ES_PORT)
+        conf.set("es.net.http.auth.user", Settings.ES_USERNAME)
+        conf.set("es.net.http.auth.pass", Settings.ES_PASSWORD)
+        conf.set("es.net.ssl", "true")
+        conf.set("es.nodes.resolve.hostname", "false")
+        conf.set("es.net.ssl.cert.allow.self.signed", "true")
+        conf.set("es.nodes.wan.only", "true")
+        conf.set("es.nodes.discovery", "false")
 
         return conf
 
@@ -62,6 +63,7 @@ class Settings:
             StructField("tags", ArrayType(StringType()), True),
         ])
         return schema
+
 
 def parse_data_from_kafka_message(sdf):
     from pyspark.sql.functions import split

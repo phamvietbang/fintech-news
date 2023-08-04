@@ -8,6 +8,7 @@ class JobName:
     vietnamnet = 'vietnamnet'
     vneconomy = 'vneconomy'
     vtc = 'vtc'
+    all = [vtc, baodautu, vneconomy, vietnamnet, nhipcaudautu, laodong, phapluatdoisong, diendandoanhnghiep, dantri]
 
 
 class ImageUrls:

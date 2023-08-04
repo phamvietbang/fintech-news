@@ -1,0 +1,10 @@
+v1
+{"taskId":0,"execTimeMillis":1691143736158,"resource":"spark_news_analysis","records":1}
+{"taskId":0,"execTimeMillis":1691143737420,"resource":"spark_news_analysis","records":2}
+{"taskId":0,"execTimeMillis":1691143737930,"resource":"spark_news_analysis","records":1}
+{"taskId":0,"execTimeMillis":1691143743086,"resource":"spark_news_analysis","records":1}
+{"taskId":0,"execTimeMillis":1691143744224,"resource":"spark_news_analysis","records":1}
+{"taskId":0,"execTimeMillis":1691143745205,"resource":"spark_news_analysis","records":1}
+{"taskId":0,"execTimeMillis":1691143746059,"resource":"spark_news_analysis","records":1}
+{"taskId":0,"execTimeMillis":1691143746947,"resource":"spark_news_analysis","records":1}
+{"taskId":0,"execTimeMillis":1691143748896,"resource":"spark_news_analysis","records":1}
