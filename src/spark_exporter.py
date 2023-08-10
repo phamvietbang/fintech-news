@@ -1,7 +1,7 @@
 import pickle
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import udf, element_at, col, from_json, regexp_replace, split
+from pyspark.sql.functions import when, udf, element_at, col, from_json, regexp_replace, split, to_timestamp, trim
 from pyspark.sql.types import MapType, StringType, ArrayType, StructType, StructField
 
 from configs import Settings
@@ -36,7 +36,7 @@ class SparkElasticExporter:
         )
         deser = udf(lambda x: pickle.loads(x), MapType(StringType(), StringType()))
         deserlized_df = news_df.withColumn('map', deser(news_df['value']))
-        parsed_df = deserlized_df.withColumn('id', element_at('map', 'id')) \
+        df = deserlized_df.withColumn('id', element_at('map', 'id')) \
             .withColumn('journal', element_at('map', 'journal')) \
             .withColumn('type', element_at('map', 'type')) \
             .withColumn('title', element_at('map', 'title')) \
@@ -48,7 +48,7 @@ class SparkElasticExporter:
             .withColumn('tags', element_at('map', 'tags'))
 
         schema = ArrayType(StructType([StructField("url", StringType()), StructField("title", StringType()), StructField("content", StringType())]))
-        parsed_df = parsed_df.withColumn('id', col('id')) \
+        df = df.withColumn('id', col('id')) \
             .withColumn('journal', col('journal')) \
             .withColumn('type', col('type')) \
             .withColumn('title', col('title')) \
@@ -59,6 +59,17 @@ class SparkElasticExporter:
             .withColumn('image', from_json(jsonize_string(col('image')), schema=schema)) \
             .withColumn('tags', split(regexp_replace("tags", r"(^\[)|(\]$)", ""), ", "))
 
+        parsed_df = df.withColumn('date',
+                           when(df.journal == "baodautu", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
+                           .when(df.journal == "dantri", to_timestamp(df.date, 'yyyy-MM-dd HH:mm'))
+                           .when(df.journal == "vietnamnet", to_timestamp(trim(df.date), 'dd/MM/yyyy HH:mm'))
+                           .when(df.journal == "vneconomy", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
+                           .when(df.journal == "nhipcaudautu", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
+                           .when(df.journal == "phapluatdoisong", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
+                           .when(df.journal == "vtc", to_timestamp(df.date, 'dd/MM/yyyy HH:mm:ss ZZZZZ'))
+                           .when(df.journal == "laodong", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
+                           .when(df.journal == "diendandoanhnghiep", to_timestamp(df.date, 'dd/MM/yyyy HH:mm:ss'))
+                           .otherwise(to_timestamp(trim(df.date), 'dd/MM/yyyy HH:mm')))
         projected_df = parsed_df.select(
             'id',
             'title',
@@ -74,7 +85,7 @@ class SparkElasticExporter:
             query = (
                 projected_df.writeStream
                 .option("checkpointLocation", Settings.SPARK_ES_CHECKPOINT_LOCATION)
-                .option("es.resource", f'{Settings.SPARK_ES_INDEX}/{Settings.SPARK_ES_DOC_TYPE}')
+                .option("es.resource", f'{Settings.SPARK_ES_INDEX}')
                 .outputMode(Settings.SPARK_ES_OUTPUT_MODE)
                 .format(Settings.SPARK_ES_DATA_SOURCE)
                 .start(f'{Settings.SPARK_ES_INDEX}')
