@@ -17,7 +17,7 @@ class CafeBizCrawler(BaoDauTuCrawler):
     def __init__(self, url, tag, start_page, producer: KafkaProducer = None, use_kafka=False):
         super().__init__(url, tag, start_page, producer, use_kafka)
         self.name = "saigontime"
-        self.save_file = f"../../.data"
+        self.save_file = f"../../data"
 
     @staticmethod
     def get_all_news_url(driver):
@@ -113,7 +113,7 @@ class CafeBizCrawler(BaoDauTuCrawler):
 
     @staticmethod
     def get_crawled_url():
-        with open("../../.data/crawled_url.json", "r") as f:
+        with open("../../data/crawled_url.json", "r") as f:
             data = json.loads(f.read())
         if not data:
             return []
@@ -121,7 +121,7 @@ class CafeBizCrawler(BaoDauTuCrawler):
 
     @staticmethod
     def write_crawled_url(data):
-        with open("../../.data/crawled_url.json", "w") as f:
+        with open("../../data/crawled_url.json", "w") as f:
             json.dump(data, f)
 
     def export_data(self):
