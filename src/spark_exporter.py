@@ -59,17 +59,18 @@ class SparkElasticExporter:
             .withColumn('image', from_json(jsonize_string(col('image')), schema=schema)) \
             .withColumn('tags', split(regexp_replace("tags", r"(^\[)|(\]$)", ""), ", "))
 
-        parsed_df = df.withColumn('date',
-                           when(df.journal == "baodautu", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
-                           .when(df.journal == "dantri", to_timestamp(df.date, 'yyyy-MM-dd HH:mm'))
-                           .when(df.journal == "vietnamnet", to_timestamp(trim(df.date), 'dd/MM/yyyy HH:mm'))
-                           .when(df.journal == "vneconomy", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
-                           .when(df.journal == "nhipcaudautu", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
-                           .when(df.journal == "phapluatdoisong", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
-                           .when(df.journal == "vtc", to_timestamp(df.date, 'dd/MM/yyyy HH:mm:ss ZZZZZ'))
-                           .when(df.journal == "laodong", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
-                           .when(df.journal == "diendandoanhnghiep", to_timestamp(df.date, 'dd/MM/yyyy HH:mm:ss'))
-                           .otherwise(to_timestamp(trim(df.date), 'dd/MM/yyyy HH:mm')))
+        parsed_df = df.withColumn(
+            'date',
+            when(df.journal == "baodautu", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
+            .when(df.journal == "dantri", to_timestamp(df.date, 'yyyy-MM-dd HH:mm'))
+            .when(df.journal == "vietnamnet", to_timestamp(trim(df.date), 'dd/MM/yyyy HH:mm'))
+            .when(df.journal == "vneconomy", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
+            .when(df.journal == "nhipcaudautu", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
+            .when(df.journal == "phapluatdoisong", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
+            .when(df.journal == "vtc", to_timestamp(df.date, 'dd/MM/yyyy HH:mm:ss ZZZZZ'))
+            .when(df.journal == "laodong", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
+            .when(df.journal == "diendandoanhnghiep", to_timestamp(df.date, 'dd/MM/yyyy HH:mm:ss'))
+            .otherwise(to_timestamp(trim(df.date), 'dd/MM/yyyy HH:mm')))
         projected_df = parsed_df.select(
             'id',
             'title',
@@ -80,7 +81,8 @@ class SparkElasticExporter:
             'date',
             'content',
             'image',
-            'tags')
+            'tags'
+        )
         while True:
             query = (
                 projected_df.writeStream
@@ -94,5 +96,5 @@ class SparkElasticExporter:
             query.awaitTermination()
 
 if __name__ == '__main__':
-    job = SparkElasticExporter("baodautu", kafka_uri="localhost:39092")
+    job = SparkElasticExporter("baodautu", kafka_uri="localhost:29092")
     job.export_data()
