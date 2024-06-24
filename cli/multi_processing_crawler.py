@@ -13,13 +13,16 @@ logger = get_logger('Crawler Process')
 @click.option('-j', '--job-list', default=['baodautu', 'dantri'], show_default=True, type=str, help='crawling job', multiple=True)
 @click.option('-s', '--start-page', default=1, show_default=True, type=int, help='start page')
 @click.option('-e', '--end-page', default=None, show_default=True, type=int, help='end page')
-@click.option('-u', '--kafka-uri', default="localhost:39092", show_default=True, type=str, help='kafka uri')
+@click.option('-u', '--kafka-uri', default=None, show_default=True, type=str, help='kafka uri')
 @click.option('-r', '--re-run', default=False, show_default=True, type=bool, help='run again')
 @click.option('-i', '--interval', default=3600, show_default=True, type=int, help='time to sleep')
-def multi_processing_crawler(job_list, start_page, end_page, kafka_uri, re_run, interval):
+@click.option('-m', '--mongo-uri', default=None, show_default=True, type=str, help='mongodb uri')
+def multi_processing_crawler(job_list, start_page, end_page, kafka_uri, re_run, interval, mongo_uri):
     while True:
         if kafka_uri:
-            job = CrawlingJob(job_list, start_page, end_page, kafka_uri, use_kafka=True)
+            job = CrawlingJob(job_list, start_page, end_page, kafka_uri)
+        elif mongo_uri:
+            job = CrawlingJob(job_list, start_page, end_page, mongodb_uri=mongo_uri)
         else:
             job = CrawlingJob(job_list, start_page, end_page)
         job.run()

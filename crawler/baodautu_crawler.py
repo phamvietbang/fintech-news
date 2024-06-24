@@ -9,15 +9,16 @@ from kafka import KafkaProducer
 
 from constants import ImageUrls
 from crawler.base_crawler import BaseCrawler
+from src.mongodb_exporter import MongoDB
 from utils.logger_utils import get_logger
 
 logger = get_logger('BaoDauTu Crawler')
 
 
 class BaoDauTuCrawler(BaseCrawler):
-    def __init__(self, url, tag, start_page, producer: KafkaProducer = None, use_kafka=False):
+    def __init__(self, url, tag, start_page, producer: KafkaProducer = None, mongodb: MongoDB = None):
         super().__init__()
-        self.use_kafka = use_kafka
+        self.mongodb = mongodb
         self.start_page = start_page
         self.tag = tag
         self.url = url
@@ -122,6 +123,18 @@ class BaoDauTuCrawler(BaseCrawler):
         data["id"] = file_name
         self.producer.send(self.name, pickle.dumps(data))
 
+    def write_to_mongodb(self, data, file_name):
+        data["_id"] = file_name
+        self.mongodb.update_docs(self.name, [data])
+
+    def write_data(self, data, file_name):
+        if self.producer:
+            self.write_to_kafka(data, file_name)
+        elif self.mongodb:
+            self.write_to_mongodb(data, file_name)
+        else:
+            self.write_to_file(data, file_name)
+
     def get_file_name(self, news_url):
         file_name = news_url.split("/")[-1]
         file_name = file_name.split(".")[0]
@@ -145,10 +158,8 @@ class BaoDauTuCrawler(BaseCrawler):
                 file_name = self.get_file_name(news_url)
                 if data:
                     data["url"] = news_url
-                    if not self.use_kafka:
-                        self.write_to_file(data, file_name)
-                    else:
-                        self.write_to_kafka(data, file_name)
+                    self.write_data(data, file_name)
+
             page += 1
             logger.info(f"Crawl {len(news_urls)} in {round(time.time() - begin, 2)}s")
 
