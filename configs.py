@@ -29,7 +29,8 @@ class Settings:
         conf = SparkConf()
         conf.setMaster(Settings.SPARK_MASTER)
         conf.setAppName(Settings.SPARK_APP_NAME)
-        conf.set("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.0,org.apache.spark:spark-streaming-kafka-0-10_2.12:3.4.0,org.elasticsearch:elasticsearch-spark-30_2.12:8.9.0")
+        conf.set("spark.jars.packages",
+                 "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.0,org.apache.spark:spark-streaming-kafka-0-10_2.12:3.4.0,org.elasticsearch:elasticsearch-spark-30_2.12:8.9.0")
         conf.set("spark.streaming.kafka.consumer.poll.ms", "512")
         conf.set("spark.executor.heartbeatInterval", "20s")
         conf.set("spark.network.timeout", "1200s")
@@ -74,3 +75,12 @@ def parse_data_from_kafka_message(sdf):
     for idx, field in enumerate(schema):
         sdf = sdf.withColumn(field.name, col.getItem(idx).cast(field.dataType))
     return sdf.select([field.name for field in schema])
+
+
+class MongoDBConfig:
+    HOST = os.environ.get("MONGODB_HOST", '0.0.0.0')
+    PORT = os.environ.get("MONGODB_PORT", '8529')
+    USERNAME = os.environ.get("MONGODB_USERNAME", "root")
+    PASSWORD = os.environ.get("MONGODB_PASSWORD", "dev123")
+    CONNECTION_URL = os.getenv("MONGODB_CONNECTION_URL") or f"mongodb@{USERNAME}:{PASSWORD}@http://{HOST}:{PORT}"
+    DATABASE = os.getenv('MONGODB_DATABASE', 'fintech_news')

@@ -8,14 +8,15 @@ from kafka import KafkaProducer
 
 from constants import ImageUrls
 from crawler.baodautu_crawler import BaoDauTuCrawler
+from src.mongodb_exporter import MongoDB
 from utils.logger_utils import get_logger
 
 logger = get_logger('DanTri Crawler')
 
 
 class DanTriCrawler(BaoDauTuCrawler):
-    def __init__(self, url, tag, start_page, producer: KafkaProducer = None, use_kafka=False):
-        super().__init__(url, tag, start_page, producer, use_kafka)
+    def __init__(self, url, tag, start_page, producer: KafkaProducer = None, mongodb: MongoDB = None):
+        super().__init__(url, tag, start_page, producer, mongodb)
         self.name = "dantri"
         self.save_file = f"./data"
         self.img_url_prefix = ImageUrls.mapping.get(self.name)
@@ -136,9 +137,6 @@ class DanTriCrawler(BaoDauTuCrawler):
                 file_name = self.get_file_name(news_url)
                 if data:
                     data["url"] = news_url
-                    if not self.use_kafka:
-                        self.write_to_file(data, file_name)
-                    else:
-                        self.write_to_kafka(data, file_name)
+                    self.write_data(data, file_name)
             page += 1
             logger.info(f"Crawl {len(news_urls)} in {round(time.time() - begin, 2)}s")
