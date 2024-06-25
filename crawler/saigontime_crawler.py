@@ -17,7 +17,7 @@ logger = get_logger('SaigonTime Crawler')
 class SaigonTimeCrawler(BaoDauTuCrawler):
     def __init__(self, url, tag, start_page, producer: KafkaProducer = None, mongodb: MongoDB = None):
         super().__init__(url, tag, start_page, producer, mongodb)
-        self.name = "saigontime"
+        self.name = "saigontimes"
         self.save_file = f"../../data"
 
     @staticmethod
@@ -80,7 +80,7 @@ class SaigonTimeCrawler(BaoDauTuCrawler):
             json.dump(data, f, indent=1, ensure_ascii=False)
 
     def get_file_name(self, news_url):
-        file_name = news_url.split("/")[-1]
+        file_name = news_url.split("/")[-2]
         file_name = file_name.split(".")[0]
         file_name = f"{self.name}_{file_name}"
         return file_name
