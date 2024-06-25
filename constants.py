@@ -8,7 +8,8 @@ class JobName:
     vietnamnet = 'vietnamnet'
     vneconomy = 'vneconomy'
     vtc = 'vtc'
-    all = [vtc, baodautu, vneconomy, vietnamnet, nhipcaudautu, laodong, phapluatdoisong, diendandoanhnghiep, dantri]
+    saigontimes = "saigontimes"
+    all = [vtc, baodautu, vneconomy, vietnamnet, nhipcaudautu, laodong, phapluatdoisong, diendandoanhnghiep, dantri, saigontimes]
 
 
 class ImageUrls:
@@ -50,7 +51,13 @@ class Urls:
             'https://vietnamnet.vn/en/vietnams-stock-market-tag16543088519370150224': "market",
             'https://vietnamnet.vn/en/vietnams-real-estate-market-tag10713918583500998948': "real-estate",
             "https://vietnamnet.vn/en/vietnams-monetary-market-tag677031158975677480": "finance"
-        }
+    }
+    saigontimes = {
+        "https://english.thesaigontimes.vn/category/business/bizinfo": "economy",
+        "https://english.thesaigontimes.vn/category/business/financial-markets/": "market",
+        "https://english.thesaigontimes.vn/category/business/corporate/": "finance",
+        "https://english.thesaigontimes.vn/tag/stock-market/": "market"
+    }
 
 # class Urls:
 #     baodautu = {

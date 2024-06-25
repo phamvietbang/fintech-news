@@ -54,8 +54,8 @@ class CafeBizCrawler(BaoDauTuCrawler):
             for content in contents:
                 news_contents.append(self.preprocess_data(content))
 
-            imgs = main_content.find_all("figure")
-            news_imgs = self.get_images(imgs)
+            # imgs = main_content.find_all("figure")
+            # news_imgs = self.get_images(imgs)
             tags = page_soup.find("span", "tags-item")
             news_tags = self.get_tags(tags)
             result = {
@@ -66,7 +66,7 @@ class CafeBizCrawler(BaoDauTuCrawler):
                 "author": author,
                 "date": date,
                 "content": news_contents,
-                "image": news_imgs,
+                # "image": news_imgs,
                 "tags": news_tags
             }
             return result
