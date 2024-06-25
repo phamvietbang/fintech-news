@@ -119,7 +119,7 @@ class VnEconomyCrawler(BaoDauTuCrawler):
         for tag in _tags:
             tag = self.preprocess_data(tag)
             if tag:
-                news_tags.append(self.preprocess_data(tag))
+                news_tags.append(tag)
 
         return news_tags
 
