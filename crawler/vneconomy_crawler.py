@@ -52,10 +52,12 @@ class VnEconomyCrawler(BaoDauTuCrawler):
             contents = main_content.find_all("p")
             news_contents = []
             for content in contents:
-                news_contents.append(self.preprocess_data(content))
+                content = self.preprocess_data(content)
+                if content:
+                    news_contents.append(content)
             article = page_soup.find("article")
-            imgs = article.find_all("figure")
-            news_imgs = self.get_images(imgs)
+            # imgs = article.find_all("figure")
+            # news_imgs = self.get_images(imgs)
             tags = page_soup.find("div", class_="detail__tag")
             news_tags = self.get_tags(tags)
             result = {
@@ -66,7 +68,7 @@ class VnEconomyCrawler(BaoDauTuCrawler):
                 "author": author,
                 "date": date,
                 "content": news_contents,
-                "image": news_imgs,
+                # "image": news_imgs,
                 "tags": news_tags
             }
             return result
@@ -115,7 +117,9 @@ class VnEconomyCrawler(BaoDauTuCrawler):
         if not _tags:
             return news_tags
         for tag in _tags:
-            news_tags.append(self.preprocess_data(tag))
+            tag = self.preprocess_data(tag)
+            if tag:
+                news_tags.append(self.preprocess_data(tag))
 
         return news_tags
 

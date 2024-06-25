@@ -22,10 +22,12 @@ class DDDNCrawler(BaoDauTuCrawler):
     @staticmethod
     def get_all_news_url(page_soup: soup):
         result = []
-        div_tag = page_soup.find("div", "danh-sach-bai-viet")
+        # div_tag = page_soup.find("div", "danh-sach-bai-viet")
+        div_tag = page_soup.find("div", "list-new-cat")
         if not div_tag:
             return result
-        h2_tags = div_tag.find_all("h2", class_="post-title")
+        # h2_tags = div_tag.find_all("h2", class_="post-title")
+        h2_tags = div_tag.find_all("h2", class_="heading")
         for tag in h2_tags:
             a_tag = tag.find("a")
             result.append(a_tag['href'])
@@ -41,24 +43,42 @@ class DDDNCrawler(BaoDauTuCrawler):
 
     def get_news_info(self, page_soup: soup):
         try:
-            title = page_soup.find("h1", class_="post-title")
-            attract = page_soup.find("h2", class_="post-sapo")
-            author = page_soup.find("div", class_="post-author-share")
+            # title = page_soup.find("h1", class_="post-title")
+            # attract = page_soup.find("h2", class_="post-sapo")
+            # author = page_soup.find("div", class_="post-author-share")
+            # author = self.preprocess_data(author)
+            # if author:
+            #     author = author.split("|")[0].strip()
+            # date = page_soup.find("span", "created_time")
+            # date = self.preprocess_data(date).replace(",", "")
+            #
+            # main_content = page_soup.find("div", class_="post-content")
+            # contents = main_content.find_all("p")
+            # news_contents = []
+            # for content in contents:
+            #     news_contents.append(self.preprocess_data(content))
+
+            # imgs = main_content.find_all("div", class_="image_center_wp")
+            # news_imgs = self.get_images(imgs)
+            # tags = page_soup.find("div", "block-content")
+
+            title = page_soup.find("h1", class_="title")
+            attract = page_soup.find("div", class_="summary").find('strong')
+            author = page_soup.find("div", class_="author-time").find('b')
             author = self.preprocess_data(author)
             if author:
                 author = author.split("|")[0].strip()
-            date = page_soup.find("span", "created_time")
+            date = page_soup.find("span", "published-time")
             date = self.preprocess_data(date).replace(",", "")
 
-            main_content = page_soup.find("div", class_="post-content")
+            main_content = page_soup.find("div", class_="description")
             contents = main_content.find_all("p")
             news_contents = []
             for content in contents:
-                news_contents.append(self.preprocess_data(content))
-
-            imgs = main_content.find_all("div", class_="image_center_wp")
-            news_imgs = self.get_images(imgs)
-            tags = page_soup.find("div", "block-content")
+                content = self.preprocess_data(content)
+                if content:
+                    news_contents.append(content)
+            tags = page_soup.find("div", "tags-new")
             news_tags = self.get_tags(tags)
             result = {
                 "journal": self.name,
@@ -68,7 +88,7 @@ class DDDNCrawler(BaoDauTuCrawler):
                 "author": author,
                 "date": date,
                 "content": news_contents,
-                "image": news_imgs,
+                # "image": news_imgs,
                 "tags": news_tags
             }
             return result
@@ -117,7 +137,9 @@ class DDDNCrawler(BaoDauTuCrawler):
         if not _tags:
             return news_tags
         for tag in _tags:
-            news_tags.append(self.preprocess_data(tag))
+            tag = self.preprocess_data(tag)
+            if tag:
+                news_tags.append(tag)
 
         return news_tags
 
@@ -127,7 +149,11 @@ class DDDNCrawler(BaoDauTuCrawler):
             if limit and page == limit:
                 break
             begin = time.time()
-            url = f"{self.url}/page-{page}.html"
+            # url = f"{self.url}/page-{page}.html"
+            if page==1:
+                url = f"{self.url}/"
+            else:
+                url = f"{self.url}/trang-{page}/"
             news_urls = self.fetch_data(url, self.get_all_news_url)
             if not news_urls:
                 break

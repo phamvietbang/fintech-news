@@ -58,8 +58,8 @@ class VietNamNetCrawler(BaoDauTuCrawler):
             for content in contents:
                 news_contents.append(self.preprocess_data(content))
             author = news_contents[-1]
-            imgs = main_content.find_all("figure", class_="image")
-            news_imgs = self.get_images(imgs)
+            # imgs = main_content.find_all("figure", class_="image")
+            # news_imgs = self.get_images(imgs)
             tags = page_soup.find("div", "tag-cotnent")
             news_tags = self.get_tags(tags)
             result = {
@@ -70,7 +70,7 @@ class VietNamNetCrawler(BaoDauTuCrawler):
                 "author": author,
                 "date": date,
                 "content": news_contents,
-                "image": news_imgs,
+                # "image": news_imgs,
                 "tags": news_tags
             }
             return result
@@ -129,7 +129,8 @@ class VietNamNetCrawler(BaoDauTuCrawler):
             if limit and page == limit:
                 break
             begin = time.time()
-            url = f"{self.url}-page{page}"
+            # url = f"{self.url}-page{page}"
+            url = f"{self.url}-page{page}.html"
             news_urls = self.fetch_data(url, self.get_all_news_url)
             if not news_urls:
                 break
