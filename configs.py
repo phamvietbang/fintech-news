@@ -30,7 +30,9 @@ class Settings:
         conf.setMaster(Settings.SPARK_MASTER)
         conf.setAppName(Settings.SPARK_APP_NAME)
         conf.set("spark.jars.packages",
-                 "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.0,org.apache.spark:spark-streaming-kafka-0-10_2.12:3.4.0,org.elasticsearch:elasticsearch-spark-30_2.12:8.9.0")
+                 "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.0,"
+                 "org.apache.spark:spark-streaming-kafka-0-10_2.12:3.4.0,"
+                 "org.elasticsearch:elasticsearch-spark-30_2.12:8.9.0")
         conf.set("spark.streaming.kafka.consumer.poll.ms", "512")
         conf.set("spark.executor.heartbeatInterval", "20s")
         conf.set("spark.network.timeout", "1200s")
@@ -43,6 +45,22 @@ class Settings:
         conf.set("es.net.ssl.cert.allow.self.signed", "true")
         conf.set("es.nodes.wan.only", "true")
         conf.set("es.nodes.discovery", "false")
+
+        return conf
+
+    @staticmethod
+    def get_spark_mongo_config():
+        conf = SparkConf()
+        conf.setMaster(Settings.SPARK_MASTER)
+        conf.setAppName(Settings.SPARK_APP_NAME)
+        conf.set("spark.jars.packages",
+                 "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.0,"
+                 "org.apache.spark:spark-streaming-kafka-0-10_2.12:3.4.0,"
+                 "org.org.mongodb.spark:mongo-spark-connector_2.12:3.0.1")
+        conf.set("spark.streaming.kafka.consumer.poll.ms", "512")
+        conf.set("spark.executor.heartbeatInterval", "20s")
+        conf.set("spark.network.timeout", "1200s")
+        conf.set("spark.mongodb.output.uri", MongoDBConfig.CONNECTION_URL)
 
         return conf
 
