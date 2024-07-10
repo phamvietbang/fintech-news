@@ -48,13 +48,19 @@ class SparkMongoExporter:
     def export_data(self):
         news_df = (
             self.spark.readStream.format("kafka")
+            .option("failOnDataLoss", "false")
             .option("kafka.bootstrap.servers", self.kafka_uri)
             .option("subscribe", self.topic)
             .load()
         )
         deser = udf(lambda x: pickle.loads(x), MapType(StringType(), StringType()))
         deserlized_df = news_df.withColumn('map', deser(news_df['value']))
-        df = deserlized_df.withColumn('id', element_at('map', 'id')) \
+
+        # schema = ArrayType(
+        #     StructType([StructField("url", StringType()),
+        #                 StructField("title", StringType()),
+        #                 StructField("content", StringType())]))
+        df = deserlized_df.withColumn('_id', element_at('map', 'id')) \
             .withColumn('journal', element_at('map', 'journal')) \
             .withColumn('type', element_at('map', 'type')) \
             .withColumn('title', element_at('map', 'title')) \
@@ -64,35 +70,16 @@ class SparkMongoExporter:
             .withColumn('content', element_at('map', 'content')) \
             .withColumn('image', element_at('map', 'image')) \
             .withColumn('tags', element_at('map', 'tags'))
-
-        # schema = ArrayType(
-        #     StructType([StructField("url", StringType()),
-        #                 StructField("title", StringType()),
-        #                 StructField("content", StringType())]))
-        df = df.withColumn('_id', col('id')) \
-            .withColumn('journal', col('journal')) \
-            .withColumn('type', col('type')) \
-            .withColumn('title', col('title')) \
-            .withColumn('attract', col('attract')) \
-            .withColumn('author', col('author')) \
-            .withColumn('date', col('date')) \
-            .withColumn('content', split(regexp_replace("content", r"(^\[)|(\]$)", ""), ", ")) \
-            .withColumn('tags', split(regexp_replace("tags", r"(^\[)|(\]$)", ""), ", "))
-
             # .withColumn('image', from_json(jsonize_string(col('image')), schema=schema)) \
+        parsed_df = df
+        # parsed_df = df.withColumn(
+        #     'date',
+        #     when(df.journal == "vneconomy", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
+        #     .when(df.journal == "saigontimes", to_timestamp(df.date, "yyyy-MM-dd'T'HH:mm:ss"))
+        #     .when(df.journal == "vietnamnet", to_timestamp(trim(df.date), 'dd/MM/yyyy HH:mm'))
+        #     .when(df.journal == "diendandoanhnghiep", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
+        #     .otherwise(to_timestamp(trim(df.date), 'dd/MM/yyyy HH:mm')))
 
-        parsed_df = df.withColumn(
-            'date',
-            when(df.journal == "baodautu", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
-            .when(df.journal == "dantri", to_timestamp(df.date, 'yyyy-MM-dd HH:mm'))
-            .when(df.journal == "vietnamnet", to_timestamp(trim(df.date), 'dd/MM/yyyy HH:mm'))
-            .when(df.journal == "vneconomy", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
-            .when(df.journal == "nhipcaudautu", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
-            .when(df.journal == "phapluatdoisong", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
-            .when(df.journal == "vtc", to_timestamp(df.date, 'dd/MM/yyyy HH:mm:ss ZZZZZ'))
-            .when(df.journal == "laodong", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
-            .when(df.journal == "diendandoanhnghiep", to_timestamp(df.date, 'dd/MM/yyyy HH:mm:ss'))
-            .otherwise(to_timestamp(trim(df.date), 'dd/MM/yyyy HH:mm')))
         projected_df = parsed_df.select(
             '_id',
             'title',

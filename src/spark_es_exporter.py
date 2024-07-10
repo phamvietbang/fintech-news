@@ -30,6 +30,7 @@ class SparkElasticExporter:
     def export_data(self):
         news_df = (
             self.spark.readStream.format("kafka")
+            .option("failOnDataLoss", "false")
             .option("kafka.bootstrap.servers", self.kafka_uri)
             .option("subscribe", self.topic)
             .option("startingOffsets", "earliest")
@@ -61,15 +62,10 @@ class SparkElasticExporter:
         # .withColumn('image', from_json(jsonize_string(col('image')), schema=schema)) \
         parsed_df = df.withColumn(
             'date',
-            when(df.journal == "baodautu", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
-            .when(df.journal == "dantri", to_timestamp(df.date, 'yyyy-MM-dd HH:mm'))
+            when(df.journal == "vneconomy", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
+            .when(df.journal == "saigontimes", to_timestamp(df.date, "yyyy-MM-dd'T'HH:mm:ss"))
             .when(df.journal == "vietnamnet", to_timestamp(trim(df.date), 'dd/MM/yyyy HH:mm'))
-            .when(df.journal == "vneconomy", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
-            .when(df.journal == "nhipcaudautu", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
-            .when(df.journal == "phapluatdoisong", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
-            .when(df.journal == "vtc", to_timestamp(df.date, 'dd/MM/yyyy HH:mm:ss ZZZZZ'))
-            .when(df.journal == "laodong", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
-            .when(df.journal == "diendandoanhnghiep", to_timestamp(df.date, 'dd/MM/yyyy HH:mm:ss'))
+            .when(df.journal == "diendandoanhnghiep", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
             .otherwise(to_timestamp(trim(df.date), 'dd/MM/yyyy HH:mm')))
         projected_df = parsed_df.select(
             'id',

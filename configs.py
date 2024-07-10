@@ -45,6 +45,7 @@ class Settings:
         conf.set("es.net.ssl.cert.allow.self.signed", "true")
         conf.set("es.nodes.wan.only", "true")
         conf.set("es.nodes.discovery", "false")
+        conf.set("spark.sql.legacy.timeParserPolicy", 'LEGACY')
 
         return conf
 
@@ -60,6 +61,7 @@ class Settings:
         conf.set("spark.streaming.kafka.consumer.poll.ms", "512")
         conf.set("spark.executor.heartbeatInterval", "20s")
         conf.set("spark.network.timeout", "1200s")
+        conf.set("spark.sql.legacy.timeParserPolicy", 'LEGACY')
 
         return conf
 
