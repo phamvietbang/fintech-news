@@ -164,4 +164,4 @@ data
 .idea
 imgs
 imgs2
-mongo_checkpoints
+mongodb_checkpoints
