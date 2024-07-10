@@ -32,6 +32,7 @@ class SparkElasticExporter:
             self.spark.readStream.format("kafka")
             .option("kafka.bootstrap.servers", self.kafka_uri)
             .option("subscribe", self.topic)
+            .option("startingOffsets", "earliest")
             .load()
         )
         deser = udf(lambda x: pickle.loads(x), MapType(StringType(), StringType()))
@@ -47,7 +48,7 @@ class SparkElasticExporter:
             .withColumn('image', element_at('map', 'image')) \
             .withColumn('tags', element_at('map', 'tags'))
 
-        schema = ArrayType(StructType([StructField("url", StringType()), StructField("title", StringType()), StructField("content", StringType())]))
+        # schema = ArrayType(StructType([StructField("url", StringType()), StructField("title", StringType()), StructField("content", StringType())]))
         df = df.withColumn('id', col('id')) \
             .withColumn('journal', col('journal')) \
             .withColumn('type', col('type')) \
@@ -56,9 +57,8 @@ class SparkElasticExporter:
             .withColumn('author', col('author')) \
             .withColumn('date', col('date')) \
             .withColumn('content', split(regexp_replace("content", r"(^\[)|(\]$)", ""), ", ")) \
-            .withColumn('image', from_json(jsonize_string(col('image')), schema=schema)) \
             .withColumn('tags', split(regexp_replace("tags", r"(^\[)|(\]$)", ""), ", "))
-
+        # .withColumn('image', from_json(jsonize_string(col('image')), schema=schema)) \
         parsed_df = df.withColumn(
             'date',
             when(df.journal == "baodautu", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
@@ -80,20 +80,23 @@ class SparkElasticExporter:
             'author',
             'date',
             'content',
-            'image',
+            # 'image',
             'tags'
         )
         while True:
             query = (
                 projected_df.writeStream
+                .format(Settings.SPARK_ES_DATA_SOURCE)
                 .option("checkpointLocation", Settings.SPARK_ES_CHECKPOINT_LOCATION)
                 .option("es.resource", f'{Settings.SPARK_ES_INDEX}')
                 .outputMode(Settings.SPARK_ES_OUTPUT_MODE)
-                .format(Settings.SPARK_ES_DATA_SOURCE)
                 .start(f'{Settings.SPARK_ES_INDEX}')
             )
 
-            query.awaitTermination()
+            try:
+                query.awaitTermination()
+            except Exception as error:
+                print('Query Exception caught:', error)
 
 if __name__ == '__main__':
     job = SparkElasticExporter("baodautu", kafka_uri="localhost:29092")

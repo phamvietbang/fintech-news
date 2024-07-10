@@ -7,22 +7,22 @@ load_dotenv()
 
 
 class Settings:
-    ES_USERNAME = os.environ.get("ES_USERNAME") or "elastic"
-    ES_PASSWORD = os.environ.get("ES_PASSWORD") or 'password'
-    ES_HOST = os.environ.get("ES_HOST") or 'host'
-    ES_PORT = os.environ.get("ES_PORT") or 'port'
+    ES_USERNAME = os.environ.get("ELASTIC_USERNAME") or "elastic"
+    ES_PASSWORD = os.environ.get("ELASTIC_PASSWORD") or 'password'
+    ES_HOST = os.environ.get("ES_HOST") or "https://localhost"
+    ES_PORT = os.environ.get("ES_PORT") or "9200"
 
-    SPARK_MASTER = os.environ.get("SPARK_MASTER") or 'master'
+    SPARK_MASTER = os.environ.get("SPARK_MASTER") or 'local[*]'
     SPARK_APP_NAME = os.environ.get("SPARK_APP_NAME") or 'appName'
     SPARK_CHECKPOINT_LOCATION = os.environ.get("SPARK_CHECKPOINT_LOCATION") or 'checkpoint'
     SPARK_DATA_SOURCE = os.environ.get("SPARK_DATA_SOURCE") or 'parquet'
     SPARK_OUTPUT_MODE = os.environ.get("SPARK_OUTPUT_MODE") or 'append'
     SPARK_PATH = os.environ.get("SPARK_PATH") or 'data'
-    SPARK_ES_INDEX = os.environ.get("SPARK_ES_INDEX") or 'esIndex'
-    SPARK_ES_DOC_TYPE = os.environ.get("SPARK_ES_DOC_TYPE") or 'esDocType'
-    SPARK_ES_CHECKPOINT_LOCATION = os.environ.get("SPARK_ES_CHECKPOINT_LOCATION") or 'checkpoint'
-    SPARK_ES_DATA_SOURCE = os.environ.get("SPARK_ES_DATA_SOURCE") or 'dataSource'
-    SPARK_ES_OUTPUT_MODE = os.environ.get("SPARK_ES_OUTPUT_MODE") or 'outputMode'
+    SPARK_ES_INDEX = os.environ.get("SPARK_ES_INDEX") or 'news'
+    SPARK_ES_DOC_TYPE = os.environ.get("SPARK_ES_DOC_TYPE") or 'fintech-news'
+    SPARK_ES_CHECKPOINT_LOCATION = os.environ.get("SPARK_ES_CHECKPOINT_LOCATION") or "data"
+    SPARK_ES_DATA_SOURCE = os.environ.get("SPARK_ES_DATA_SOURCE") or "org.elasticsearch.spark.sql"
+    SPARK_ES_OUTPUT_MODE = os.environ.get("SPARK_ES_OUTPUT_MODE") or 'append'
 
     @staticmethod
     def get_spark_config():
@@ -56,11 +56,10 @@ class Settings:
         conf.set("spark.jars.packages",
                  "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.0,"
                  "org.apache.spark:spark-streaming-kafka-0-10_2.12:3.4.0,"
-                 "org.org.mongodb.spark:mongo-spark-connector_2.12:3.0.1")
+                 "org.mongodb.spark:mongo-spark-connector_2.12:10.3.0")
         conf.set("spark.streaming.kafka.consumer.poll.ms", "512")
         conf.set("spark.executor.heartbeatInterval", "20s")
         conf.set("spark.network.timeout", "1200s")
-        conf.set("spark.mongodb.output.uri", MongoDBConfig.CONNECTION_URL)
 
         return conf
 

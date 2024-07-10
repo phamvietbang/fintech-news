@@ -1,10 +1,12 @@
 import pickle
 
+from pyspark import SparkContext
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import when, udf, element_at, col, from_json, regexp_replace, split, to_timestamp, trim
 from pyspark.sql.types import MapType, StringType, ArrayType, StructType, StructField
 
 from configs import Settings, MongoDBConfig
+from src.mongodb_exporter import MongoDB
 from utils.logger_utils import get_logger
 
 logger = get_logger('Spark Elastic Exporter')
@@ -26,6 +28,22 @@ class SparkMongoExporter:
         self.spark = SparkSession.builder \
             .config(conf=conf) \
             .getOrCreate()
+        self.mongo = MongoDB()
+
+    def export(self, df):
+        result = {
+            '_id': df.id,
+            'title': df.title,
+            'type': df.type,
+            'journal': df.journal,
+            'attract': df.attract,
+            'author': df.author,
+            'date': df.date,
+            'content': df.content,
+            "tags": df.tags
+        }
+
+        self.mongo.update_docs(self.topic, [result])
 
     def export_data(self):
         news_df = (
@@ -47,8 +65,11 @@ class SparkMongoExporter:
             .withColumn('image', element_at('map', 'image')) \
             .withColumn('tags', element_at('map', 'tags'))
 
-        schema = ArrayType(StructType([StructField("url", StringType()), StructField("title", StringType()), StructField("content", StringType())]))
-        df = df.withColumn('id', col('id')) \
+        # schema = ArrayType(
+        #     StructType([StructField("url", StringType()),
+        #                 StructField("title", StringType()),
+        #                 StructField("content", StringType())]))
+        df = df.withColumn('_id', col('id')) \
             .withColumn('journal', col('journal')) \
             .withColumn('type', col('type')) \
             .withColumn('title', col('title')) \
@@ -56,8 +77,9 @@ class SparkMongoExporter:
             .withColumn('author', col('author')) \
             .withColumn('date', col('date')) \
             .withColumn('content', split(regexp_replace("content", r"(^\[)|(\]$)", ""), ", ")) \
-            .withColumn('image', from_json(jsonize_string(col('image')), schema=schema)) \
             .withColumn('tags', split(regexp_replace("tags", r"(^\[)|(\]$)", ""), ", "))
+
+            # .withColumn('image', from_json(jsonize_string(col('image')), schema=schema)) \
 
         parsed_df = df.withColumn(
             'date',
@@ -72,7 +94,7 @@ class SparkMongoExporter:
             .when(df.journal == "diendandoanhnghiep", to_timestamp(df.date, 'dd/MM/yyyy HH:mm:ss'))
             .otherwise(to_timestamp(trim(df.date), 'dd/MM/yyyy HH:mm')))
         projected_df = parsed_df.select(
-            'id',
+            '_id',
             'title',
             'type',
             'journal',
@@ -80,16 +102,23 @@ class SparkMongoExporter:
             'author',
             'date',
             'content',
-            'image',
+            # 'image',
             'tags'
         )
         while True:
             query = (
-                projected_df.writeStream.
-                format("mongo").
-                outputMode("append").
-                option("database", MongoDBConfig.DATABASE).
-                option("collection", self.topic).start()
+                projected_df.writeStream
+                .outputMode("append")
+                # foreach(self.export).start()
+                .format("mongodb")
+                .queryName("ToMDB")
+                .option("checkpointLocation", "mongodb_checkpoints")
+                .option("forceDeleteTempCheckpointLocation", "true")
+                .option('spark.mongodb.connection.uri', MongoDBConfig.CONNECTION_URL)
+                .option('spark.mongodb.database', MongoDBConfig.DATABASE)
+                .option('spark.mongodb.collection', self.topic)
+                .trigger(continuous="10 seconds")
+                .start()
             )
 
             query.awaitTermination()
