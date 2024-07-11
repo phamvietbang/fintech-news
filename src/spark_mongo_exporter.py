@@ -1,8 +1,9 @@
 import pickle
+import time
 
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import when, udf, element_at, col, from_json, regexp_replace, split, to_timestamp, trim
+from pyspark.sql.functions import when, udf, element_at, col, from_json, regexp_replace, split, to_timestamp, trim, lit
 from pyspark.sql.types import MapType, StringType, ArrayType, StructType, StructField
 
 from configs import Settings, MongoDBConfig
@@ -19,7 +20,7 @@ def jsonize_string(string: str):
         .replace("}]", "\"}]") \
         .replace(", ", "\", \"") \
         .replace("}\", \"{", "\"}, {\"") \
-
+        .replace(",", "\", \"")
 class SparkMongoExporter:
     def __init__(self, topic, kafka_uri="localhost:29092"):
         self.kafka_uri = kafka_uri
@@ -56,11 +57,8 @@ class SparkMongoExporter:
         deser = udf(lambda x: pickle.loads(x), MapType(StringType(), StringType()))
         deserlized_df = news_df.withColumn('map', deser(news_df['value']))
 
-        # schema = ArrayType(
-        #     StructType([StructField("url", StringType()),
-        #                 StructField("title", StringType()),
-        #                 StructField("content", StringType())]))
-        df = deserlized_df.withColumn('_id', element_at('map', 'id')) \
+        schema = ArrayType(StringType())
+        df = deserlized_df.withColumn('id', element_at('map', 'id')) \
             .withColumn('journal', element_at('map', 'journal')) \
             .withColumn('type', element_at('map', 'type')) \
             .withColumn('title', element_at('map', 'title')) \
@@ -69,16 +67,20 @@ class SparkMongoExporter:
             .withColumn('date', element_at('map', 'date')) \
             .withColumn('content', element_at('map', 'content')) \
             .withColumn('image', element_at('map', 'image')) \
-            .withColumn('tags', element_at('map', 'tags'))
-            # .withColumn('image', from_json(jsonize_string(col('image')), schema=schema)) \
+            .withColumn('tags', element_at('map', 'tags')) \
+            .withColumn("crawled", lit(time.time()))
+
+        df = df.withColumn('_id', col('id')) \
+            .withColumn('journal', col('journal')) \
+            .withColumn('type', col('type')) \
+            .withColumn('title', col('title')) \
+            .withColumn('attract', col('attract')) \
+            .withColumn('author', col('author')) \
+            .withColumn('date', col('date')) \
+            .withColumn('content', split(regexp_replace("content", r"(^\[)|(\]$)", ""), ", ")) \
+            .withColumn('tags', split(regexp_replace("tags", r"(^\[)|(\]$)", ""), ", "))
+
         parsed_df = df
-        # parsed_df = df.withColumn(
-        #     'date',
-        #     when(df.journal == "vneconomy", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
-        #     .when(df.journal == "saigontimes", to_timestamp(df.date, "yyyy-MM-dd'T'HH:mm:ss"))
-        #     .when(df.journal == "vietnamnet", to_timestamp(trim(df.date), 'dd/MM/yyyy HH:mm'))
-        #     .when(df.journal == "diendandoanhnghiep", to_timestamp(df.date, 'dd/MM/yyyy HH:mm'))
-        #     .otherwise(to_timestamp(trim(df.date), 'dd/MM/yyyy HH:mm')))
 
         projected_df = parsed_df.select(
             '_id',
@@ -90,7 +92,8 @@ class SparkMongoExporter:
             'date',
             'content',
             # 'image',
-            'tags'
+            'tags',
+            'crawled'
         )
         while True:
             query = (

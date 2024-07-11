@@ -1,5 +1,5 @@
 import os
-from pyspark.sql.types import StringType, ArrayType, StructType, StructField
+from pyspark.sql.types import StringType, ArrayType, StructType, StructField, FloatType
 from pyspark import SparkConf
 from dotenv import load_dotenv
 
@@ -57,7 +57,8 @@ class Settings:
         conf.set("spark.jars.packages",
                  "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.0,"
                  "org.apache.spark:spark-streaming-kafka-0-10_2.12:3.4.0,"
-                 "org.mongodb.spark:mongo-spark-connector_2.12:10.3.0")
+                 "org.mongodb.spark:mongo-spark-connector_2.12:10.3.0"
+                 )
         conf.set("spark.streaming.kafka.consumer.poll.ms", "512")
         conf.set("spark.executor.heartbeatInterval", "20s")
         conf.set("spark.network.timeout", "1200s")
@@ -66,9 +67,35 @@ class Settings:
         return conf
 
     @staticmethod
+    def get_spark_mongo_es_config():
+        conf = SparkConf()
+        conf.setMaster(Settings.SPARK_MASTER)
+        conf.setAppName(Settings.SPARK_APP_NAME)
+        conf.set("spark.jars.packages",
+                 "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.0,"
+                 "org.apache.spark:spark-streaming-kafka-0-10_2.12:3.4.0,"
+                 "org.mongodb.spark:mongo-spark-connector_2.12:10.3.0,"
+                 "org.elasticsearch:elasticsearch-spark-30_2.12:8.9.0")
+        conf.set("spark.streaming.kafka.consumer.poll.ms", "512")
+        conf.set("spark.executor.heartbeatInterval", "20s")
+        conf.set("spark.network.timeout", "1200s")
+        conf.set("spark.sql.legacy.timeParserPolicy", 'LEGACY')
+        conf.set("es.nodes", Settings.ES_HOST)
+        conf.set("es.port", Settings.ES_PORT)
+        conf.set("es.net.http.auth.user", Settings.ES_USERNAME)
+        conf.set("es.net.http.auth.pass", Settings.ES_PASSWORD)
+        conf.set("es.net.ssl", "true")
+        conf.set("es.nodes.resolve.hostname", "false")
+        conf.set("es.net.ssl.cert.allow.self.signed", "true")
+        conf.set("es.nodes.wan.only", "true")
+        conf.set("es.nodes.discovery", "false")
+
+        return conf
+
+    @staticmethod
     def create_data_structure():
         schema = StructType([
-            StructField("id", StringType(), False),
+            StructField("_id", StringType(), False),
             StructField("journal", StringType(), False),
             StructField("type", StringType(), False),
             StructField("title", StringType(), False),
@@ -76,11 +103,12 @@ class Settings:
             StructField("author", StringType(), True),
             StructField("date", StringType(), False),
             StructField("content", ArrayType(StringType()), True),
-            StructField("image", ArrayType(StructType([
-                StructField("url", StringType(), True),
-                StructField("title", StringType(), True),
-            ])), True),
+            # StructField("image", ArrayType(StructType([
+            #     StructField("url", StringType(), True),
+            #     StructField("title", StringType(), True),
+            # ])), True),
             StructField("tags", ArrayType(StringType()), True),
+            StructField("crawled", FloatType(), True)
         ])
         return schema
 
