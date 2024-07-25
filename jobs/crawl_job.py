@@ -2,6 +2,7 @@ import time
 
 from kafka import KafkaProducer
 
+from crawler.saigontime_crawler import SaigonTimeCrawler
 from crawler.vtc_crawler import VTCCrawler
 from crawler.baodautu_crawler import BaoDauTuCrawler
 from crawler.vienamnet_crawler import VietNamNetCrawler
@@ -51,6 +52,8 @@ class CrawlingJob:
                 self.add_job(jobs, job, self.crawl_laodong)
             if job == JobName.vtc:
                 self.add_job(jobs, job, self.crawl_vtc)
+            if job ==JobName.saigontimes:
+                self.add_job(jobs, job, self.crawl_saigontimes)
         if not jobs:
             logger.warning("There is no job to run!")
         else:
@@ -124,6 +127,12 @@ class CrawlingJob:
         producer = self.create_producer()
         for url_, tag_ in Urls.vtc.items():
             job = VTCCrawler(url_, tag_, self.start_page, producer, self.mongodb)
+            job.export_data(self.end_page)
+
+    def crawl_saigontimes(self):
+        producer = self.create_producer()
+        for url_, tag_ in Urls.saigontimes.items():
+            job = SaigonTimeCrawler(url_, tag_, self.start_page, producer, self.mongodb)
             job.export_data(self.end_page)
 
     def create_producer(self):
