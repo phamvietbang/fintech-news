@@ -17,9 +17,9 @@ class Settings:
     SPARK_CHECKPOINT_LOCATION = os.environ.get("SPARK_CHECKPOINT_LOCATION") or 'checkpoint'
     SPARK_DATA_SOURCE = os.environ.get("SPARK_DATA_SOURCE") or 'parquet'
     SPARK_OUTPUT_MODE = os.environ.get("SPARK_OUTPUT_MODE") or 'append'
-    SPARK_PATH = os.environ.get("SPARK_PATH") or 'data'
-    SPARK_ES_INDEX = os.environ.get("SPARK_ES_INDEX") or 'news'
-    SPARK_ES_DOC_TYPE = os.environ.get("SPARK_ES_DOC_TYPE") or 'fintech-news'
+    SPARK_PATH = os.environ.get("SPARK_PATH") or 'data' # local storage
+    SPARK_ES_INDEX = os.environ.get("SPARK_ES_INDEX") or 'news' # index name in elastic-kibana
+    SPARK_ES_DOC_TYPE = os.environ.get("SPARK_ES_DOC_TYPE") or 'fintech-news' # database collection in elastic-kibana
     SPARK_ES_CHECKPOINT_LOCATION = os.environ.get("SPARK_ES_CHECKPOINT_LOCATION") or "data"
     SPARK_ES_DATA_SOURCE = os.environ.get("SPARK_ES_DATA_SOURCE") or "org.elasticsearch.spark.sql"
     SPARK_ES_OUTPUT_MODE = os.environ.get("SPARK_ES_OUTPUT_MODE") or 'append'
