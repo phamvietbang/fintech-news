@@ -58,8 +58,8 @@ class BaoDauTuCrawler(BaseCrawler):
             news_contents = []
             for content in contents:
                 news_contents.append(self.preprocess_data(content))
-            imgs = main_content.find_all("tbody")
-            news_imgs = self.get_images(imgs)
+            # imgs = main_content.find_all("tbody")
+            # news_imgs = self.get_images(imgs)
             tags = page_soup.find("div", "tag_detail")
             news_tags = self.get_tags(tags)
             result = {
@@ -70,7 +70,7 @@ class BaoDauTuCrawler(BaseCrawler):
                 "author": self.preprocess_data(author),
                 "date": date,
                 "content": news_contents,
-                "image": news_imgs,
+                # "image": news_imgs,
                 "tags": news_tags
             }
             return result

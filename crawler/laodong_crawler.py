@@ -53,14 +53,14 @@ class LaoDongCrawler(BaoDauTuCrawler):
             for content in contents:
                 news_contents.append(self.preprocess_data(content))
             try:
-                imgs = page_soup.find_elements(By.XPATH, "//figure[@class='insert-center-image']")
-                news_imgs = self.get_images(imgs)
+                # imgs = page_soup.find_elements(By.XPATH, "//figure[@class='insert-center-image']")
+                # news_imgs = self.get_images(imgs)
 
                 tags = page_soup.find_element(By.XPATH, "//div[@class='lst-tags']")
                 news_tags = self.get_tags(tags)
             except:
                 news_tags = []
-                news_imgs = []
+                # news_imgs = []
                 pass
             result = {
                 "journal": self.name,
@@ -70,7 +70,7 @@ class LaoDongCrawler(BaoDauTuCrawler):
                 "author": author,
                 "date": date,
                 "content": news_contents,
-                "image": news_imgs,
+                # "image": news_imgs,
                 "tags": news_tags
             }
             return result

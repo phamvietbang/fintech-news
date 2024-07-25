@@ -53,10 +53,12 @@ class NCDTCrawler(BaoDauTuCrawler):
             contents = main_content.find_all("p")
             news_contents = []
             for content in contents:
-                news_contents.append(self.preprocess_data(content))
+                content = self.preprocess_data(content)
+                if content:
+                    news_contents.append(content)
 
-            imgs = main_content.find_all("tbody")
-            news_imgs = self.get_images(imgs)
+            # imgs = main_content.find_all("tbody")
+            # news_imgs = self.get_images(imgs)
             tags = page_soup.find("div", "post-tags")
             news_tags = self.get_tags(tags)
             result = {
@@ -67,7 +69,7 @@ class NCDTCrawler(BaoDauTuCrawler):
                 "author": author,
                 "date": date,
                 "content": news_contents,
-                "image": news_imgs,
+                # "image": news_imgs,
                 "tags": news_tags
             }
             return result
@@ -115,7 +117,9 @@ class NCDTCrawler(BaoDauTuCrawler):
         if not _tags:
             return news_tags
         for tag in _tags:
-            news_tags.append(self.preprocess_data(tag))
+            tag = self.preprocess_data(tag)
+            if tag:
+                news_tags.append(tag)
 
         return news_tags
 

@@ -8,25 +8,26 @@ from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 
 from crawler.baodautu_crawler import BaoDauTuCrawler
+from src.mongodb_exporter import MongoDB
 from utils.logger_utils import get_logger
 
-logger = get_logger('Cafe Biz Crawler')
+logger = get_logger('SaigonTime Crawler')
 
 
-class CafeBizCrawler(BaoDauTuCrawler):
-    def __init__(self, url, tag, start_page, producer: KafkaProducer = None, use_kafka=False):
-        super().__init__(url, tag, start_page, producer, use_kafka)
-        self.name = "saigontime"
+class SaigonTimeCrawler(BaoDauTuCrawler):
+    def __init__(self, url, tag, start_page, producer: KafkaProducer = None, mongodb: MongoDB = None):
+        super().__init__(url, tag, start_page, producer, mongodb)
+        self.name = "saigontimes"
         self.save_file = f"../../data"
 
     @staticmethod
-    def get_all_news_url(driver):
+    def get_all_news_url(page_soup):
         result = []
-        h3_tags = driver.find_elements(By.TAG_NAME, "h3")
-        for tag in h3_tags:
-            a_tag = tag.find_element(By.TAG_NAME, "a")
-            href = a_tag.get_attribute('href')
-            result.append(href)
+        div_tags = page_soup.find_all("div", class_="td-module-meta-info")
+        for tag in div_tags:
+            a_tag = tag.find("h3").find("a")
+            if a_tag.get("href"):
+                result.append(a_tag["href"])
         return result
 
     @staticmethod
@@ -40,20 +41,22 @@ class CafeBizCrawler(BaoDauTuCrawler):
     def get_news_info(self, page_soup: soup):
         try:
             title = page_soup.find("h1", class_="tdb-title-text")
-            attract = page_soup.find("p", style="font-weight: 600; font-style: italic;")
-            author = page_soup.find("div", class_="content-tacgia")
+            attract = page_soup.find("div", class_="td-post-content").find("h6")
+            author = page_soup.find("a", class_="tdb-author-name")
             author = self.preprocess_data(author)
             date = page_soup.find("time")["datetime"]
             date = str(date).strip()
 
-            main_content = page_soup.find("div", class_="detail-content")
+            main_content = page_soup.find("div", class_="td-post-content")
             contents = main_content.find_all("p")
             news_contents = []
             for content in contents:
-                news_contents.append(self.preprocess_data(content))
+                content = self.preprocess_data(content)
+                if content:
+                    news_contents.append(content)
 
-            imgs = main_content.find_all("figure")
-            news_imgs = self.get_images(imgs)
+            # imgs = main_content.find_all("figure")
+            # news_imgs = self.get_images(imgs)
             tags = page_soup.find("ul", "tdb-tags")
             news_tags = self.get_tags(tags)
             result = {
@@ -64,7 +67,7 @@ class CafeBizCrawler(BaoDauTuCrawler):
                 "author": author,
                 "date": date,
                 "content": news_contents,
-                "image": news_imgs,
+                # "image": news_imgs,
                 "tags": news_tags
             }
             return result
@@ -77,7 +80,7 @@ class CafeBizCrawler(BaoDauTuCrawler):
             json.dump(data, f, indent=1, ensure_ascii=False)
 
     def get_file_name(self, news_url):
-        file_name = news_url.split("/")[-1]
+        file_name = news_url.split("/")[-2]
         file_name = file_name.split(".")[0]
         file_name = f"{self.name}_{file_name}"
         return file_name
@@ -107,7 +110,9 @@ class CafeBizCrawler(BaoDauTuCrawler):
         if not _tags:
             return news_tags
         for tag in _tags:
-            news_tags.append(self.preprocess_data(tag))
+            tag = self.preprocess_data(tag)
+            if tag:
+                news_tags.append(tag)
 
         return news_tags
 
@@ -124,41 +129,25 @@ class CafeBizCrawler(BaoDauTuCrawler):
         with open("../../data/crawled_url.json", "w") as f:
             json.dump(data, f)
 
-    def export_data(self):
+    def export_data(self, limit=None):
         page = self.start_page
-        driver = self.get_driver()
-        crawled_url = self.get_crawled_url()
-        try:
-            while True:
-                begin = time.time()
-                old_length = len(crawled_url)
-                news_urls = self.use_chrome_driver(driver, self.url, self.get_all_news_url)
-                if not news_urls:
-                    break
-                for news_url in news_urls:
-                    if news_url in crawled_url:
-                        continue
-                    else:
-                        crawled_url.append(news_url)
-                    logger.info(f"Export page {page}: {news_url}")
-                    data = self.fetch_data(news_url, self.get_news_info)
-                    file_name = self.get_file_name(news_url)
-                    if data:
-                        if not self.use_kafka:
-                            self.write_to_file(data, file_name)
-                        else:
-                            self.write_to_kafka(data, file_name)
-                page += 1
-                logger.info(f"Crawl {len(news_urls)} in {round(time.time() - begin, 2)}s")
-                if old_length == len(crawled_url):
-                    break
-                driver.find_element(By.CLASS_NAME, 'td_ajax_load_more td_ajax_load_more_js').click()
-                time.sleep(3)
-            self.write_crawled_url(crawled_url)
-        except Exception as e:
-            logger.error(e)
-        finally:
-            driver.quit()
+        while True:
+            if limit and page == limit:
+                break
+            begin = time.time()
+            url = f"{self.url}/page/{page}/"
+            news_urls = self.fetch_data(url, self.get_all_news_url)
+            if not news_urls or len(news_urls) <= 1:
+                break
+            for news_url in news_urls:
+                logger.info(f"Export page {page}: {news_url}")
+                data = self.fetch_data(news_url, self.get_news_info)
+                file_name = self.get_file_name(news_url)
+                if data:
+                    self.write_data(data, file_name)
+            page += 1
+            logger.info(f"Crawl {len(news_urls)} in {round(time.time() - begin, 2)}s")
+            time.sleep(3)
 
 
 if __name__ == "__main__":
@@ -170,6 +159,3 @@ if __name__ == "__main__":
         "https://thesaigontimes.vn/kinh-doanh/thuong-mai-dien-tu/": "fintech",
         "https://thesaigontimes.vn/the-gioi/": "market"
     }
-    for key, value in url.items():
-        job = CafeBizCrawler(url=key, tag=value, start_page=1)
-        job.export_data()
