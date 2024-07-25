@@ -1,5 +1,6 @@
 # fintech-news
-Crawl data fintech news using kafka and spark
+![Crawling And Processing Data System](bigdata.drawio.png)
+
 
 ## Set up
 Create file .env like file [.env.example](.env.example) and the setting features in [configs.py](configs.py)
